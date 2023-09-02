@@ -14,30 +14,38 @@ func (square Square) String() string {
 const boardNumFiles = 8
 const boardNumRanks = 8
 
-type Board [boardNumFiles][boardNumRanks]Piece
+type Board [][]Piece
 
-func (board *Board) GetPiece(square Square) Piece {
+func NewBoard() Board {
+	b := make([][]Piece, boardNumFiles)
+	for i := range b {
+		b[i] = make([]Piece, boardNumRanks)
+	}
+	return b
+}
+
+func (board Board) GetPiece(square Square) Piece {
 	return board[square.File][square.Rank]
 }
 
-func (board *Board) SetPiece(piece Piece, square Square) {
+func (board Board) SetPiece(piece Piece, square Square) {
 	board[square.File][square.Rank] = piece
 }
 
-func (board *Board) ClearSquare(square Square) {
+func (board Board) ClearSquare(square Square) {
 	board.SetPiece(nil, square)
 }
 
-func (board *Board) MovePiece(start Square, end Square) {
+func (board Board) MovePiece(start Square, end Square) {
 	piece := board.GetPiece(start)
 	board.ClearSquare(start)
 	board.SetPiece(piece, end)
 }
 
-func (board *Board) NumRanks() int {
+func (board Board) NumRanks() int {
 	return boardNumRanks
 }
 
-func (board *Board) NumFiles() int {
+func (board Board) NumFiles() int {
 	return boardNumFiles
 }

@@ -5,8 +5,9 @@ type Game struct {
 }
 
 func NewGame() *Game {
-	var game Game
+	game := new(Game)
+	game.Board = NewBoard()
 	var initializer initializer
-	initializer.initializePieces(&game.Board)
-	return &game
+	initializer.initializePieces(game.Board)
+	return game
 }
