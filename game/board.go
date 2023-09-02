@@ -49,3 +49,13 @@ func (board Board) NumRanks() int {
 func (board Board) NumFiles() int {
 	return boardNumFiles
 }
+
+func (board Board) Clone() Board {
+	copy := NewBoard()
+	for i := range board {
+		for j := range board[i] {
+			copy[i][j] = board[i][j]
+		}
+	}
+	return copy
+}
