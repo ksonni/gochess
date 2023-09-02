@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"gochess/game"
+)
 
 func main() {
-	fmt.Println("Welcome to gochess!")
+	fmt.Println(game.NewGame().Board)
 }
