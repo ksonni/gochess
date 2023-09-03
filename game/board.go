@@ -11,6 +11,10 @@ func (square Square) String() string {
 	return fmt.Sprintf("%c%d", 'a'+square.File, square.Rank+1)
 }
 
+func (square Square) Adding(file int, rank int) Square {
+	return Square{File: square.File + file, Rank: square.Rank + rank}
+}
+
 const boardNumFiles = 8
 const boardNumRanks = 8
 
@@ -58,4 +62,9 @@ func (board Board) Clone() Board {
 		}
 	}
 	return copy
+}
+
+func (board Board) HasSquare(square Square) bool {
+	return square.File >= 0 && square.File < board.NumFiles() &&
+		square.Rank >= 0 && square.Rank < board.NumRanks()
 }
