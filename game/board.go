@@ -1,6 +1,9 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Square struct {
 	File int
@@ -11,8 +14,29 @@ func (square Square) String() string {
 	return fmt.Sprintf("%c%d", 'a'+square.File, square.Rank+1)
 }
 
-func (square Square) Adding(file int, rank int) Square {
-	return Square{File: square.File + file, Rank: square.Rank + rank}
+func MustSquare(notation string) Square {
+	square, err := ParseSquare(notation)
+	if err != nil {
+		panic(fmt.Sprintf("game: failed to parse invalid square %s", notation))
+	}
+	return *square
+}
+
+func ParseSquare(notation string) (*Square, error) {
+	var file rune
+	var rank int
+	_, err := fmt.Sscanf(strings.ToLower(notation), "%c%d", &file, &rank)
+	if err != nil {
+		return nil, err
+	}
+	return &Square{File: int(file - 'a'), Rank: rank - 1}, nil
+}
+
+func (square Square) Adding(delta Square) Square {
+	return Square{
+		File: square.File + delta.File,
+		Rank: square.Rank + delta.Rank,
+	}
 }
 
 const boardNumFiles = 8
@@ -40,7 +64,8 @@ func (board Board) ClearSquare(square Square) {
 	board.SetPiece(nil, square)
 }
 
-func (board Board) MovePiece(start Square, end Square) {
+// Jumps piece from one square to another without verifying legality.
+func (board Board) JumpPiece(start Square, end Square) {
 	piece := board.GetPiece(start)
 	board.ClearSquare(start)
 	board.SetPiece(piece, end)
