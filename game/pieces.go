@@ -1,16 +1,24 @@
 package game
 
+type Piece interface {
+	PieceMover
+	Color() PieceColor
+}
+
+type PieceMover interface {
+	Move(from Square, to Square, board *Board)
+
+	CanMove(from Square, to Square, board *Board) bool
+
+	ComputeAttackedSquares(sq Square, board *Board) map[Square]bool
+}
+
 type PieceColor int
 
 const (
 	PieceColor_White PieceColor = iota
 	PieceColor_Black
 )
-
-type Piece interface {
-	mover
-	Color() PieceColor
-}
 
 var (
 	perpendicularDeltas = []Square{
@@ -37,7 +45,7 @@ func init() {
 
 // TODO: castling
 type King struct {
-	laterallMover
+	deltaMover
 	PieceColor PieceColor
 }
 
@@ -48,14 +56,14 @@ func (k King) String() string {
 	return "K"
 }
 func (k King) CanMove(from Square, to Square, board *Board) bool {
-	return k.laterallMover.canMove(from, to, royalDeltas, 1, board)
+	return k.deltaMover.canMove(from, to, royalDeltas, 1, board)
 }
 func (k King) ComputeAttackedSquares(sq Square, board *Board) map[Square]bool {
-	return k.laterallMover.computeAttackedSquares(sq, royalDeltas, 1, board)
+	return k.deltaMover.computeAttackedSquares(sq, royalDeltas, 1, board)
 }
 
 type Queen struct {
-	laterallMover
+	deltaMover
 	PieceColor PieceColor
 }
 
@@ -66,14 +74,14 @@ func (q Queen) String() string {
 	return "Q"
 }
 func (q Queen) CanMove(from Square, to Square, board *Board) bool {
-	return q.laterallMover.canMove(from, to, royalDeltas, 0, board)
+	return q.deltaMover.canMove(from, to, royalDeltas, 0, board)
 }
 func (q Queen) ComputeAttackedSquares(sq Square, board *Board) map[Square]bool {
-	return q.laterallMover.computeAttackedSquares(sq, royalDeltas, 0, board)
+	return q.deltaMover.computeAttackedSquares(sq, royalDeltas, 0, board)
 }
 
 type Rook struct {
-	laterallMover
+	deltaMover
 	PieceColor PieceColor
 }
 
@@ -84,14 +92,14 @@ func (r Rook) String() string {
 	return "R"
 }
 func (r Rook) CanMove(from Square, to Square, board *Board) bool {
-	return r.laterallMover.canMove(from, to, perpendicularDeltas, 0, board)
+	return r.deltaMover.canMove(from, to, perpendicularDeltas, 0, board)
 }
 func (r Rook) ComputeAttackedSquares(sq Square, board *Board) map[Square]bool {
-	return r.laterallMover.computeAttackedSquares(sq, perpendicularDeltas, 0, board)
+	return r.deltaMover.computeAttackedSquares(sq, perpendicularDeltas, 0, board)
 }
 
 type Bishop struct {
-	laterallMover
+	deltaMover
 	PieceColor PieceColor
 }
 
@@ -102,14 +110,14 @@ func (b Bishop) String() string {
 	return "B"
 }
 func (b Bishop) CanMove(from Square, to Square, board *Board) bool {
-	return b.laterallMover.canMove(from, to, diagonalDeltas, 0, board)
+	return b.deltaMover.canMove(from, to, diagonalDeltas, 0, board)
 }
 func (b Bishop) ComputeAttackedSquares(sq Square, board *Board) map[Square]bool {
-	return b.laterallMover.computeAttackedSquares(sq, diagonalDeltas, 0, board)
+	return b.deltaMover.computeAttackedSquares(sq, diagonalDeltas, 0, board)
 }
 
 type Knight struct {
-	laterallMover
+	deltaMover
 	PieceColor PieceColor
 }
 
@@ -120,8 +128,8 @@ func (k Knight) String() string {
 	return "N"
 }
 func (k Knight) CanMove(from Square, to Square, board *Board) bool {
-	return k.laterallMover.canMove(from, to, knightDeltas, 1, board)
+	return k.deltaMover.canMove(from, to, knightDeltas, 1, board)
 }
 func (k Knight) ComputeAttackedSquares(sq Square, board *Board) map[Square]bool {
-	return k.laterallMover.computeAttackedSquares(sq, knightDeltas, 1, board)
+	return k.deltaMover.computeAttackedSquares(sq, knightDeltas, 1, board)
 }

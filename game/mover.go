@@ -1,16 +1,9 @@
 package game
 
-type mover interface {
-	Move(from Square, to Square, board *Board)
+// Conforms to PieceMover
+type deltaMover struct{}
 
-	CanMove(from Square, to Square, board *Board) bool
-
-	ComputeAttackedSquares(sq Square, board *Board) map[Square]bool
-}
-
-type laterallMover struct{}
-
-func (mover laterallMover) canMove(from Square, to Square, deltas []Square,
+func (mover deltaMover) canMove(from Square, to Square, deltas []Square,
 	maxSteps int, board *Board) bool {
 	for _, delta := range deltas {
 		if mover.canMoveWithDelta(from, to, delta, maxSteps, board) {
@@ -20,7 +13,7 @@ func (mover laterallMover) canMove(from Square, to Square, deltas []Square,
 	return false
 }
 
-func (mover laterallMover) canMoveWithDelta(from Square, to Square, delta Square, maxSteps int, board *Board) bool {
+func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, maxSteps int, board *Board) bool {
 	piece := board.GetPiece(from)
 	for current, i := from.Adding(delta), 1; board.SquareInRange(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
 		if currentPiece := board.GetPiece(current); currentPiece != nil &&
@@ -34,12 +27,12 @@ func (mover laterallMover) canMoveWithDelta(from Square, to Square, delta Square
 	return false
 }
 
-func (mover laterallMover) Move(from Square, to Square, board *Board) {
+func (mover deltaMover) Move(from Square, to Square, board *Board) {
 	board.SetPiece(board.GetPiece(from), to)
 	board.ClearSquare(from)
 }
 
-func (mover laterallMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, board *Board) map[Square]bool {
+func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, board *Board) map[Square]bool {
 	attacked := make(map[Square]bool)
 	for _, delta := range deltas {
 		partAttacked := mover.computeAttackedSquaresWithDelta(sq, delta, maxSteps, board)
@@ -50,7 +43,7 @@ func (mover laterallMover) computeAttackedSquares(sq Square, deltas []Square, ma
 	return attacked
 }
 
-func (mover laterallMover) computeAttackedSquaresWithDelta(
+func (mover deltaMover) computeAttackedSquaresWithDelta(
 	sq Square, delta Square, maxSteps int, board *Board) map[Square]bool {
 	attacked := make(map[Square]bool)
 	piece := board.GetPiece(sq)
