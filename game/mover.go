@@ -22,7 +22,7 @@ func (mover laterallMover) canMove(from Square, to Square, deltas []Square,
 
 func (mover laterallMover) canMoveWithDelta(from Square, to Square, delta Square, maxSteps int, board *Board) bool {
 	piece := board.GetPiece(from)
-	for current, i := from.Adding(delta), 1; board.HasSquare(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
+	for current, i := from.Adding(delta), 1; board.SquareInRange(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
 		if currentPiece := board.GetPiece(current); currentPiece != nil &&
 			currentPiece.Color() == piece.Color() {
 			return false
@@ -54,7 +54,7 @@ func (mover laterallMover) computeAttackedSquaresWithDelta(
 	sq Square, delta Square, maxSteps int, board *Board) map[Square]bool {
 	attacked := make(map[Square]bool)
 	piece := board.GetPiece(sq)
-	for current, i := sq.Adding(delta), 1; board.HasSquare(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
+	for current, i := sq.Adding(delta), 1; board.SquareInRange(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
 		if currentPiece := board.GetPiece(current); currentPiece != nil {
 			if currentPiece.Color() != piece.Color() {
 				attacked[current] = true

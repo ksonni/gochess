@@ -29,7 +29,9 @@ func printAttacked(title string, piecePos string, pieceTargetPos string) {
 
 	g.Board.JumpPiece(sourceSq, targetSq)
 
-	attacked := g.Board.GetPiece(targetSq).ComputeAttackedSquares(targetSq, &g.Board)
+	piece := g.Board.GetPiece(targetSq)
+
+	attacked := piece.ComputeAttackedSquares(targetSq, &g.Board)
 
 	var out []string
 	for sq, _ := range attacked {

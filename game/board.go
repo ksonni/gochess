@@ -1,74 +1,35 @@
 package game
 
-import (
-	"fmt"
-	"strings"
+const (
+	boardNumFiles = 8
+	boardNumRanks = 8
 )
 
-type Square struct {
-	File int
-	Rank int
-}
-
-func (square Square) String() string {
-	return fmt.Sprintf("%c%d", 'a'+square.File, square.Rank+1)
-}
-
-func MustSquare(notation string) Square {
-	square, err := ParseSquare(notation)
-	if err != nil {
-		panic(fmt.Sprintf("game: failed to parse invalid square %s", notation))
-	}
-	return *square
-}
-
-func ParseSquare(notation string) (*Square, error) {
-	var file rune
-	var rank int
-	_, err := fmt.Sscanf(strings.ToLower(notation), "%c%d", &file, &rank)
-	if err != nil {
-		return nil, err
-	}
-	return &Square{File: int(file - 'a'), Rank: rank - 1}, nil
-}
-
-func (square Square) Adding(delta Square) Square {
-	return Square{
-		File: square.File + delta.File,
-		Rank: square.Rank + delta.Rank,
-	}
-}
-
-const boardNumFiles = 8
-const boardNumRanks = 8
-
-type Board [][]Piece
+type Board map[Square]Piece
 
 func NewBoard() Board {
-	b := make([][]Piece, boardNumFiles)
-	for i := range b {
-		b[i] = make([]Piece, boardNumRanks)
-	}
-	return b
+	return make(Board)
 }
 
 func (board Board) GetPiece(square Square) Piece {
-	return board[square.File][square.Rank]
+	return board[square]
 }
 
 func (board Board) SetPiece(piece Piece, square Square) {
-	board[square.File][square.Rank] = piece
+	board[square] = piece
 }
 
 func (board Board) ClearSquare(square Square) {
-	board.SetPiece(nil, square)
+	delete(board, square)
 }
 
 // Jumps piece from one square to another without verifying legality.
 func (board Board) JumpPiece(start Square, end Square) {
 	piece := board.GetPiece(start)
 	board.ClearSquare(start)
-	board.SetPiece(piece, end)
+	if piece != nil {
+		board.SetPiece(piece, end)
+	}
 }
 
 func (board Board) NumRanks() int {
@@ -81,15 +42,13 @@ func (board Board) NumFiles() int {
 
 func (board Board) Clone() Board {
 	copy := NewBoard()
-	for i := range board {
-		for j := range board[i] {
-			copy[i][j] = board[i][j]
-		}
+	for k, v := range board {
+		copy[k] = v
 	}
 	return copy
 }
 
-func (board Board) HasSquare(square Square) bool {
+func (board Board) SquareInRange(square Square) bool {
 	return square.File >= 0 && square.File < board.NumFiles() &&
 		square.Rank >= 0 && square.Rank < board.NumRanks()
 }
