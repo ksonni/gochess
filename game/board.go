@@ -7,10 +7,6 @@ const (
 
 type Board map[Square]Piece
 
-func NewBoard() Board {
-	return make(Board)
-}
-
 func (board Board) GetPiece(square Square) Piece {
 	return board[square]
 }
@@ -41,7 +37,7 @@ func (board Board) NumFiles() int {
 }
 
 func (board Board) Clone() Board {
-	copy := NewBoard()
+	copy := make(Board)
 	for k, v := range board {
 		copy[k] = v
 	}

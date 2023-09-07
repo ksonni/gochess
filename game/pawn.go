@@ -12,12 +12,12 @@ func (p Pawn) String() string {
 }
 
 // TODO: implement
-func (p Pawn) Move(from Square, to Square, board *Board) {
+func (p Pawn) Move(from Square, to Square, g *Game) {
 	panic("pawn: not implemented")
 }
-func (p Pawn) CanMove(from Square, to Square, board *Board) bool {
+func (p Pawn) CanMove(from Square, to Square, g *Game) bool {
 	panic("pawn: not implemented")
 }
-func (p Pawn) ComputeAttackedSquares(sq Square, board *Board) map[Square]bool {
+func (p Pawn) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	panic("pawn: not implemented")
 }

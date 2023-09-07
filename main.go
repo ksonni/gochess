@@ -31,7 +31,7 @@ func printAttacked(title string, piecePos string, pieceTargetPos string) {
 
 	piece := g.Board.GetPiece(targetSq)
 
-	attacked := piece.ComputeAttackedSquares(targetSq, &g.Board)
+	attacked := piece.ComputeAttackedSquares(targetSq, g)
 
 	var out []string
 	for sq, _ := range attacked {

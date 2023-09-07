@@ -1,13 +1,16 @@
 package game
 
 type Game struct {
-	Board Board
+	Board *Board
+	initializer
 }
 
 func NewGame() *Game {
 	game := new(Game)
-	game.Board = NewBoard()
-	var initializer initializer
-	initializer.initializePieces(game.Board)
+	board := make(Board)
+
+	game.Board = &board
+	game.initializePieces(game.Board)
+
 	return game
 }
