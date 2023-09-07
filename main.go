@@ -27,9 +27,11 @@ func printAttacked(title string, piecePos string, pieceTargetPos string) {
 	sourceSq := game.MustSquare(piecePos)
 	targetSq := game.MustSquare(pieceTargetPos)
 
-	g.Board.JumpPiece(sourceSq, targetSq)
+	board := g.Board()
 
-	piece := g.Board.GetPiece(targetSq)
+	board.JumpPiece(sourceSq, targetSq)
+
+	piece := board.GetPiece(targetSq)
 
 	attacked := piece.ComputeAttackedSquares(targetSq, g)
 

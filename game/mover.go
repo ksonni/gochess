@@ -14,7 +14,7 @@ func (mover deltaMover) canMove(from Square, to Square, deltas []Square,
 }
 
 func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, maxSteps int, game *Game) bool {
-	board := game.Board
+	board := game.Board()
 	piece := board.GetPiece(from)
 	for current, i := from.Adding(delta), 1; board.SquareInRange(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
 		if currentPiece := board.GetPiece(current); currentPiece != nil &&
@@ -29,8 +29,9 @@ func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, m
 }
 
 func (mover deltaMover) Move(from Square, to Square, game *Game) {
-	game.Board.SetPiece(game.Board.GetPiece(from), to)
-	game.Board.ClearSquare(from)
+	board := game.Board()
+	board.SetPiece(board.GetPiece(from), to)
+	board.ClearSquare(from)
 }
 
 func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, game *Game) map[Square]bool {
@@ -48,7 +49,7 @@ func (mover deltaMover) computeAttackedSquaresWithDelta(
 	sq Square, delta Square, maxSteps int, game *Game) map[Square]bool {
 	attacked := make(map[Square]bool)
 
-	board := game.Board
+	board := game.Board()
 	piece := board.GetPiece(sq)
 	for current, i := sq.Adding(delta), 1; board.SquareInRange(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
 		if currentPiece := board.GetPiece(current); currentPiece != nil {
