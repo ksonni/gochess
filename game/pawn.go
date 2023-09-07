@@ -2,7 +2,6 @@ package game
 
 type Pawn struct {
 	PieceColor PieceColor
-	deltaMover
 }
 
 func (p Pawn) Color() PieceColor {
@@ -11,7 +10,9 @@ func (p Pawn) Color() PieceColor {
 func (p Pawn) String() string {
 	return "p"
 }
-
+func (p Pawn) Move(from Square, to Square, g *Game) {
+	panic("pawn: not implemented")
+}
 func (p Pawn) CanMove(from Square, to Square, g *Game) bool {
 	panic("pawn: not implemented")
 }

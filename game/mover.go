@@ -29,9 +29,7 @@ func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, m
 }
 
 func (mover deltaMover) Move(from Square, to Square, game *Game) {
-	board := game.Board()
-	board.SetPiece(board.GetPiece(from), to)
-	board.ClearSquare(from)
+	game.Board().JumpPiece(from, to)
 }
 
 func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, game *Game) map[Square]bool {
