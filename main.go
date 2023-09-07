@@ -31,9 +31,12 @@ func printAttacked(title string, piecePos string, pieceTargetPos string) {
 
 	board.JumpPiece(sourceSq, targetSq)
 
-	piece := board.GetPiece(targetSq)
+	_, exists := board.GetPiece(targetSq)
+	if !exists {
+		panic(fmt.Sprintf("main: no piece exists at %s", piecePos))
+	}
 
-	attacked := piece.ComputeAttackedSquares(targetSq, g)
+	attacked := g.ComputeAttackedSquares(targetSq)
 
 	var out []string
 	for sq, _ := range attacked {

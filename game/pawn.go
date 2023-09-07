@@ -10,12 +10,12 @@ func (p Pawn) Color() PieceColor {
 func (p Pawn) String() string {
 	return "p"
 }
-func (p Pawn) Move(from Square, to Square, g *Game) {
+func (p Pawn) move(from Square, to Square, g *Game) *Board {
 	panic("pawn: not implemented")
 }
-func (p Pawn) CanMove(from Square, to Square, g *Game) bool {
+func (p Pawn) canMove(from Square, to Square, g *Game) bool {
 	panic("pawn: not implemented")
 }
-func (p Pawn) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (p Pawn) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	panic("pawn: not implemented")
 }

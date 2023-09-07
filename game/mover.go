@@ -15,10 +15,12 @@ func (mover deltaMover) canMove(from Square, to Square, deltas []Square,
 
 func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, maxSteps int, game *Game) bool {
 	board := game.Board()
-	piece := board.GetPiece(from)
+	piece, exists := board.GetPiece(from)
+	if !exists {
+		return false
+	}
 	for current, i := from.Adding(delta), 1; board.SquareInRange(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
-		if currentPiece := board.GetPiece(current); currentPiece != nil &&
-			currentPiece.Color() == piece.Color() {
+		if currentPiece, exists := board.GetPiece(current); exists && currentPiece.Color() == piece.Color() {
 			return false
 		}
 		if current == to {
@@ -28,8 +30,10 @@ func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, m
 	return false
 }
 
-func (mover deltaMover) Move(from Square, to Square, game *Game) {
-	game.Board().JumpPiece(from, to)
+func (mover deltaMover) move(from Square, to Square, game *Game) *Board {
+	b := game.Board().Clone()
+	b.JumpPiece(from, to)
+	return &b
 }
 
 func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, game *Game) map[Square]bool {
@@ -48,9 +52,12 @@ func (mover deltaMover) computeAttackedSquaresWithDelta(
 	attacked := make(map[Square]bool)
 
 	board := game.Board()
-	piece := board.GetPiece(sq)
+	piece, exists := board.GetPiece(sq)
+	if !exists {
+		return make(map[Square]bool)
+	}
 	for current, i := sq.Adding(delta), 1; board.SquareInRange(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
-		if currentPiece := board.GetPiece(current); currentPiece != nil {
+		if currentPiece, exists := board.GetPiece(current); exists {
 			if currentPiece.Color() != piece.Color() {
 				attacked[current] = true
 			}

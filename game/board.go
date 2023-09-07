@@ -7,8 +7,9 @@ const (
 
 type Board map[Square]Piece
 
-func (board Board) GetPiece(square Square) Piece {
-	return board[square]
+func (board Board) GetPiece(square Square) (Piece, bool) {
+	piece, exists := board[square]
+	return piece, exists
 }
 
 func (board Board) SetPiece(piece Piece, square Square) {
@@ -21,9 +22,9 @@ func (board Board) ClearSquare(square Square) {
 
 // Jumps piece from one square to another without verifying legality.
 func (board Board) JumpPiece(start Square, end Square) {
-	piece := board.GetPiece(start)
+	piece, exists := board.GetPiece(start)
 	board.ClearSquare(start)
-	if piece != nil {
+	if exists {
 		board.SetPiece(piece, end)
 	}
 }
