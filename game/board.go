@@ -20,7 +20,6 @@ func (board Board) ClearSquare(square Square) {
 	delete(board, square)
 }
 
-// Jumps piece from one square to another without verifying legality.
 func (board Board) JumpPiece(start Square, end Square) {
 	piece, exists := board.GetPiece(start)
 	board.ClearSquare(start)

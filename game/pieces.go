@@ -26,7 +26,7 @@ func (p pieceProps) Id() PieceId {
 }
 
 type pieceMover interface {
-	move(from Square, to Square, g *Game) *Board
+	move(from Square, to Square, g *Game) (*Board, error)
 
 	canMove(from Square, to Square, g *Game) bool
 
@@ -39,6 +39,10 @@ const (
 	PieceColor_White PieceColor = iota
 	PieceColor_Black
 )
+
+type promotablePiece interface {
+	moveAndPromote(from Square, to Square, promotion Piece, g *Game) (*Board, error)
+}
 
 var (
 	perpendicularDeltas = []Square{

@@ -30,25 +30,20 @@ func (g *Game) CanMove(from Square, to Square) bool {
 	return exists && piece.canMove(from, to, g)
 }
 
+func (g *Game) Move(from Square, to Square) error {
+	return g.move(from, to, nil)
+}
+
+func (g *Game) MoveAndPromote(from Square, to Square, promotion Piece) error {
+	return g.move(from, to, promotion)
+}
+
 func (g *Game) ComputeAttackedSquares(from Square) map[Square]bool {
 	piece, exists := g.Board().GetPiece(from)
 	if !exists {
 		return make(map[Square]bool)
 	}
 	return piece.computeAttackedSquares(from, g)
-}
-
-func (g *Game) Move(from Square, to Square) error {
-	piece, exists := g.Board().GetPiece(from)
-	if !exists {
-		return fmt.Errorf("game: no piece exists at %s", from)
-	}
-	if !g.CanMove(from, to) {
-		return fmt.Errorf("game: invalid move - %s to %s", from, to)
-	}
-	result := piece.move(from, to, g)
-	g.positions = append(g.positions, result)
-	return nil
 }
 
 // Moves use a 1 based index because move 0 is a valid position
@@ -62,4 +57,34 @@ func (g *Game) BoardAtMove(move int) (*Board, error) {
 
 func (g *Game) NumMoves() int {
 	return len(g.positions) - 1
+}
+
+func (g *Game) move(from Square, to Square, promotion Piece) error {
+	piece, exists := g.Board().GetPiece(from)
+	if !exists {
+		return fmt.Errorf("game: no piece exists at %s", from)
+	}
+	if !piece.canMove(from, to, g) {
+		return fmt.Errorf("game: invalid move - %s to %s", from, to)
+	}
+
+	var nextPos *Board
+	var err error
+
+	if promotion == nil {
+		nextPos, err = piece.move(from, to, g)
+	} else if promoPiece, ok := piece.(promotablePiece); ok {
+		nextPos, err = promoPiece.moveAndPromote(from, to, promotion, g)
+	} else {
+		return fmt.Errorf("game: piece at %s doesn't support promotion", from)
+	}
+	if err != nil {
+		return fmt.Errorf("game: move failed: %v", err)
+	}
+
+	g.positions = append(g.positions, nextPos)
+
+	//  TODO: compute game result
+
+	return nil
 }

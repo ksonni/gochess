@@ -30,10 +30,10 @@ func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, m
 	return false
 }
 
-func (mover deltaMover) move(from Square, to Square, game *Game) *Board {
+func (mover deltaMover) move(from Square, to Square, game *Game) (*Board, error) {
 	b := game.Board().Clone()
 	b.JumpPiece(from, to)
-	return &b
+	return &b, nil
 }
 
 func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, game *Game) map[Square]bool {
