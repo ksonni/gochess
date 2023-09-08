@@ -28,6 +28,7 @@ func (p pieceProps) Id() PieceId {
 type pieceMover interface {
 	move(from Square, to Square, g *Game) (*Board, error)
 
+	// TODO: consider global rules before making decision
 	canMove(from Square, to Square, g *Game) bool
 
 	computeAttackedSquares(sq Square, g *Game) map[Square]bool
@@ -44,6 +45,7 @@ type promotablePiece interface {
 	moveAndPromote(from Square, to Square, promotion Piece, g *Game) (*Board, error)
 }
 
+// TODO: maybe less dupe?
 var (
 	perpendicularDeltas = []Square{
 		{File: 0, Rank: 1}, {File: 0, Rank: -1},

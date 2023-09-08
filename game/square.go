@@ -38,3 +38,14 @@ func (square Square) Adding(delta Square) Square {
 		Rank: square.Rank + delta.Rank,
 	}
 }
+
+func (square Square) Subtracting(delta Square) Square {
+	return square.Adding(delta.Multiplying(Square{File: -1, Rank: -1}))
+}
+
+func (square Square) Multiplying(delta Square) Square {
+	return Square{
+		File: square.File * delta.File,
+		Rank: square.Rank * delta.Rank,
+	}
+}

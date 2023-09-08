@@ -18,11 +18,15 @@ func NewGame() *Game {
 }
 
 func (g *Game) Board() *Board {
-	board, err := g.BoardAtMove(g.NumMoves())
-	if err != nil {
-		panic(fmt.Sprintf("game: initialized without a board: %v", err))
+	board, exists := g.BoardAtMove(g.NumMoves())
+	if !exists {
+		panic("game: initialized without a board")
 	}
 	return board
+}
+
+func (g *Game) PreviousBoard() (*Board, bool) {
+	return g.BoardAtMove(g.NumMoves() - 1)
 }
 
 func (g *Game) CanMove(from Square, to Square) bool {
@@ -47,12 +51,33 @@ func (g *Game) ComputeAttackedSquares(from Square) map[Square]bool {
 }
 
 // Moves use a 1 based index because move 0 is a valid position
-func (g *Game) BoardAtMove(move int) (*Board, error) {
+func (g *Game) BoardAtMove(move int) (*Board, bool) {
 	size := len(g.positions)
-	if move < 0 || move > size {
-		return nil, fmt.Errorf("game: no board found for move %d", move)
+	if move < 0 || move >= size {
+		return nil, false
 	}
-	return g.positions[move], nil
+	return g.positions[move], true
+}
+
+func (g *Game) PieceAtMove(move int, square Square) (Piece, bool) {
+	board, ok := g.BoardAtMove(move)
+	if !ok {
+		return nil, false
+	}
+	return board.GetPiece(square)
+}
+
+func (g *Game) PiecePositionAtMove(move int, piece Piece) (*Square, bool) {
+	board, ok := g.BoardAtMove(move)
+	if !ok {
+		return nil, false
+	}
+	for square, p := range *board {
+		if p.Id() == piece.Id() {
+			return &square, true
+		}
+	}
+	return nil, false
 }
 
 func (g *Game) NumMoves() int {
