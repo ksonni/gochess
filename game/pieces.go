@@ -1,11 +1,31 @@
 package game
 
+import "math/rand"
+
 type Piece interface {
-	PieceMover
+	pieceMover
 	Color() PieceColor
+	Id() PieceId
 }
 
-type PieceMover interface {
+type PieceId int
+
+type pieceProps struct {
+	PieceColor PieceColor
+	PieceId    PieceId
+}
+
+func newPieceProps(color PieceColor) pieceProps {
+	return pieceProps{PieceColor: color, PieceId: PieceId(rand.Int())}
+}
+func (p pieceProps) Color() PieceColor {
+	return p.PieceColor
+}
+func (p pieceProps) Id() PieceId {
+	return p.PieceId
+}
+
+type pieceMover interface {
 	move(from Square, to Square, g *Game) *Board
 
 	canMove(from Square, to Square, g *Game) bool
@@ -46,12 +66,9 @@ func init() {
 // TODO: castling
 type King struct {
 	deltaMover
-	PieceColor PieceColor
+	pieceProps
 }
 
-func (k King) Color() PieceColor {
-	return k.PieceColor
-}
 func (k King) String() string {
 	return "K"
 }
@@ -64,12 +81,9 @@ func (k King) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
 
 type Queen struct {
 	deltaMover
-	PieceColor PieceColor
+	pieceProps
 }
 
-func (q Queen) Color() PieceColor {
-	return q.PieceColor
-}
 func (q Queen) String() string {
 	return "Q"
 }
@@ -82,12 +96,9 @@ func (q Queen) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
 
 type Rook struct {
 	deltaMover
-	PieceColor PieceColor
+	pieceProps
 }
 
-func (r Rook) Color() PieceColor {
-	return r.PieceColor
-}
 func (r Rook) String() string {
 	return "R"
 }
@@ -100,15 +111,9 @@ func (r Rook) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
 
 type Bishop struct {
 	deltaMover
-	PieceColor PieceColor
+	pieceProps
 }
 
-func (b Bishop) Color() PieceColor {
-	return b.PieceColor
-}
-func (b Bishop) String() string {
-	return "B"
-}
 func (b Bishop) canMove(from Square, to Square, g *Game) bool {
 	return b.deltaMover.canMove(from, to, diagonalDeltas, 0, g)
 }
@@ -118,15 +123,9 @@ func (b Bishop) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
 
 type Knight struct {
 	deltaMover
-	PieceColor PieceColor
+	pieceProps
 }
 
-func (k Knight) Color() PieceColor {
-	return k.PieceColor
-}
-func (k Knight) String() string {
-	return "N"
-}
 func (k Knight) canMove(from Square, to Square, g *Game) bool {
 	return k.deltaMover.canMove(from, to, knightDeltas, 1, g)
 }

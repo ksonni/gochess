@@ -1,7 +1,7 @@
 package game
 
 type Pawn struct {
-	PieceColor PieceColor
+	pieceProps
 }
 
 func (p Pawn) Color() PieceColor {
