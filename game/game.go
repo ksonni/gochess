@@ -53,6 +53,20 @@ func (g *Game) ComputeAttackedSquares(from Square) map[Square]bool {
 	return piece.ComputeAttackedSquares(from, g)
 }
 
+func (g *Game) ComputeSquaresAttackedBySide(color PieceColor, board *Board) map[Square]bool {
+	attacked := make(map[Square]bool)
+	for square, piece := range *board {
+		if piece.Color() != color {
+			continue
+		}
+		pieceAttacked := piece.ComputeAttackedSquares(square, g)
+		for pieceSquare, val := range pieceAttacked {
+			attacked[pieceSquare] = val
+		}
+	}
+	return attacked
+}
+
 // Moves use a 1 based index because move 0 is a valid position
 func (g *Game) BoardAtMove(move int) (*Board, bool) {
 	size := len(g.positions)

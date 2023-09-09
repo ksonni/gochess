@@ -33,6 +33,11 @@ func main() {
 		move{"a3", "a4"}, move{"d5", "d4"},
 		move{"e2", "e4"}, move{"h7", "h6"},
 	)
+
+	// Attacked square computation
+	g := game.NewGame()
+	g.Move(game.MustSquare("e2"), game.MustSquare("e4"))
+	fmt.Println(g.ComputeSquaresAttackedBySide(game.PieceColor_White, g.Board()))
 }
 
 type move = [2]string
