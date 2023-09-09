@@ -26,7 +26,7 @@ func init() {
 }
 
 type PromotablePiece interface {
-	PlanMoveWithPromotion(from Square, to Square, promotion Piece, g *Game) (*Board, error)
+	PlanMoveWithPromotionLocally(from Square, to Square, promotion Piece, g *Game) (*Board, error)
 }
 
 // Conforms to promotablePiece, Piece
@@ -41,8 +41,8 @@ func (p Pawn) String() string {
 	return "p"
 }
 
-func (p Pawn) PlanMove(from Square, to Square, g *Game) (*Board, error) {
-	return p.PlanMoveWithPromotion(from, to, nil, g)
+func (p Pawn) PlanMoveLocally(from Square, to Square, g *Game) (*Board, error) {
+	return p.PlanMoveWithPromotionLocally(from, to, nil, g)
 }
 
 func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
@@ -53,7 +53,7 @@ func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
 	return attacked
 }
 
-func (p Pawn) PlanMoveWithPromotion(from Square, to Square, promotion Piece, g *Game) (*Board, error) {
+func (p Pawn) PlanMoveWithPromotionLocally(from Square, to Square, promotion Piece, g *Game) (*Board, error) {
 	movement, ok := p.computePawnMovement(from, to, g)
 	if !ok {
 		return nil, fmt.Errorf("pawn: illegal move")

@@ -9,7 +9,8 @@ type Piece interface {
 }
 
 type PieceMover interface {
-	PlanMove(from Square, to Square, g *Game) (*Board, error)
+	// Plans a move without considering if it might leave the king in check.
+	PlanMoveLocally(from Square, to Square, g *Game) (*Board, error)
 
 	ComputeAttackedSquares(sq Square, g *Game) map[Square]bool
 }
@@ -82,7 +83,7 @@ func (k King) String() string {
 }
 
 // TODO: castling
-func (k King) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+func (k King) PlanMoveLocally(from Square, to Square, g *Game) (*Board, error) {
 	return k.deltaMover.planMove(from, to, royalDeltas, 1, g)
 }
 func (k King) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
@@ -97,7 +98,7 @@ type Queen struct {
 func (q Queen) String() string {
 	return "Q"
 }
-func (q Queen) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+func (q Queen) PlanMoveLocally(from Square, to Square, g *Game) (*Board, error) {
 	return q.deltaMover.planMove(from, to, royalDeltas, 0, g)
 }
 func (q Queen) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
@@ -112,7 +113,7 @@ type Rook struct {
 func (r Rook) String() string {
 	return "R"
 }
-func (r Rook) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+func (r Rook) PlanMoveLocally(from Square, to Square, g *Game) (*Board, error) {
 	return r.deltaMover.planMove(from, to, perpendicularDeltas, 0, g)
 }
 func (r Rook) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
@@ -124,7 +125,7 @@ type Bishop struct {
 	pieceProps
 }
 
-func (b Bishop) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+func (b Bishop) PlanMoveLocally(from Square, to Square, g *Game) (*Board, error) {
 	return b.deltaMover.planMove(from, to, diagonalDeltas, 0, g)
 }
 func (b Bishop) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
@@ -136,7 +137,7 @@ type Knight struct {
 	pieceProps
 }
 
-func (k Knight) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+func (k Knight) PlanMoveLocally(from Square, to Square, g *Game) (*Board, error) {
 	return k.deltaMover.planMove(from, to, knightDeltas, 1, g)
 }
 func (k Knight) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {

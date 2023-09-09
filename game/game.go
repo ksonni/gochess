@@ -34,7 +34,7 @@ func (g *Game) PlanMove(from Square, to Square) (*Board, error) {
 	return g.planMove(from, to, nil)
 }
 
-func (g *Game) PlanMoveWithPromotion(from Square, to Square, promotion Piece) (*Board, error) {
+func (g *Game) PlanMoveWithPromotionLocally(from Square, to Square, promotion Piece) (*Board, error) {
 	return g.planMove(from, to, promotion)
 }
 
@@ -97,6 +97,10 @@ func (g *Game) NumMoves() int {
 	return len(g.positions) - 1
 }
 
+func (g *Game) SideCanMove(color PieceColor) bool {
+	return g.NumMoves()%2 == int(color)
+}
+
 // Helpers
 
 func (g *Game) planMove(from Square, to Square, promotion Piece) (*Board, error) {
@@ -104,19 +108,25 @@ func (g *Game) planMove(from Square, to Square, promotion Piece) (*Board, error)
 	if !exists {
 		return nil, fmt.Errorf("game: no piece exists at %s", from)
 	}
+	if !g.SideCanMove(piece.Color()) {
+		return nil, fmt.Errorf("game: attempted to move piece out of turn")
+	}
 
 	var nextPos *Board
 	var err error
 
 	if promotion == nil {
-		nextPos, err = piece.PlanMove(from, to, g)
+		nextPos, err = piece.PlanMoveLocally(from, to, g)
 	} else if promoPiece, ok := piece.(PromotablePiece); ok {
-		nextPos, err = promoPiece.PlanMoveWithPromotion(from, to, promotion, g)
+		nextPos, err = promoPiece.PlanMoveWithPromotionLocally(from, to, promotion, g)
 	} else {
 		return nil, fmt.Errorf("game: piece at %s doesn't support promotion", from)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("game: move failed: %v", err)
+	}
+	if g.IsSideInCheck(piece.Color(), nextPos) {
+		return nil, fmt.Errorf("game: move failed: violates king integrity")
 	}
 
 	return nextPos, nil
