@@ -101,6 +101,31 @@ func (g *Game) SideCanMove(color PieceColor) bool {
 	return g.NumMoves()%2 == int(color)
 }
 
+func (g *Game) SquareHasSamePieceAtMoves(sq Square, move1 int, move2 int) bool {
+	if move1 < 0 || move2 < 0 || move1 > g.NumMoves() || move2 > g.NumMoves() {
+		return false
+	}
+	p1, _ := g.positions[move1].GetPiece(sq)
+	p2, _ := g.positions[move2].GetPiece(sq)
+	if p1 == nil && p2 == nil {
+		return true
+	}
+	if p1 == nil || p2 == nil {
+		return false
+	}
+	return p1.Id() == p2.Id()
+}
+
+func (g *Game) SquareHasChangedSinceMove(sq Square, move int) bool {
+	current := g.NumMoves()
+	for i := move; i < len(g.positions); i++ {
+		if !g.SquareHasSamePieceAtMoves(sq, i, current) {
+			return true
+		}
+	}
+	return false
+}
+
 // Helpers
 
 func (g *Game) planMove(from Square, to Square, promotion Piece) (*Board, error) {
