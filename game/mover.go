@@ -1,5 +1,7 @@
 package game
 
+import "fmt"
+
 // Conforms to PieceMover
 type deltaMover struct{}
 
@@ -30,7 +32,11 @@ func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, m
 	return false
 }
 
-func (mover deltaMover) move(from Square, to Square, game *Game) (*Board, error) {
+func (mover deltaMover) planMove(from Square, to Square, deltas []Square,
+	maxSteps int, game *Game) (*Board, error) {
+	if !mover.canMove(from, to, deltas, maxSteps, game) {
+		return nil, fmt.Errorf("board: invalid move")
+	}
 	b := game.Board().Clone()
 	b.JumpPiece(from, to)
 	return &b, nil

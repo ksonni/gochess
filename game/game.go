@@ -29,16 +29,19 @@ func (g *Game) PreviousBoard() (*Board, bool) {
 	return g.BoardAtMove(g.NumMoves() - 1)
 }
 
-func (g *Game) CanMove(from Square, to Square) bool {
-	piece, exists := g.Board().GetPiece(from)
-	return exists && piece.canMove(from, to, g)
+func (g *Game) PlanMove(from Square, to Square) (*Board, error) {
+	return g.planMove(from, to, nil)
+}
+
+func (g *Game) PlanMoveWithPromotion(from Square, to Square, promotion Piece) (*Board, error) {
+	return g.planMove(from, to, promotion)
 }
 
 func (g *Game) Move(from Square, to Square) error {
 	return g.move(from, to, nil)
 }
 
-func (g *Game) MoveAndPromote(from Square, to Square, promotion Piece) error {
+func (g *Game) MoveWithPromotion(from Square, to Square, promotion Piece) error {
 	return g.move(from, to, promotion)
 }
 
@@ -47,7 +50,7 @@ func (g *Game) ComputeAttackedSquares(from Square) map[Square]bool {
 	if !exists {
 		return make(map[Square]bool)
 	}
-	return piece.computeAttackedSquares(from, g)
+	return piece.ComputeAttackedSquares(from, g)
 }
 
 // Moves use a 1 based index because move 0 is a valid position
@@ -84,32 +87,36 @@ func (g *Game) NumMoves() int {
 	return len(g.positions) - 1
 }
 
-func (g *Game) move(from Square, to Square, promotion Piece) error {
+// Helpers
+
+func (g *Game) planMove(from Square, to Square, promotion Piece) (*Board, error) {
 	piece, exists := g.Board().GetPiece(from)
 	if !exists {
-		return fmt.Errorf("game: no piece exists at %s", from)
-	}
-	if !piece.canMove(from, to, g) {
-		return fmt.Errorf("game: invalid move - %s to %s", from, to)
+		return nil, fmt.Errorf("game: no piece exists at %s", from)
 	}
 
 	var nextPos *Board
 	var err error
 
 	if promotion == nil {
-		nextPos, err = piece.move(from, to, g)
-	} else if promoPiece, ok := piece.(promotablePiece); ok {
-		nextPos, err = promoPiece.moveAndPromote(from, to, promotion, g)
+		nextPos, err = piece.PlanMove(from, to, g)
+	} else if promoPiece, ok := piece.(PromotablePiece); ok {
+		nextPos, err = promoPiece.PlanMoveWithPromotion(from, to, promotion, g)
 	} else {
-		return fmt.Errorf("game: piece at %s doesn't support promotion", from)
+		return nil, fmt.Errorf("game: piece at %s doesn't support promotion", from)
 	}
 	if err != nil {
-		return fmt.Errorf("game: move failed: %v", err)
+		return nil, fmt.Errorf("game: move failed: %v", err)
 	}
 
-	g.positions = append(g.positions, nextPos)
+	return nextPos, nil
+}
 
-	//  TODO: compute game result
-
+func (g *Game) move(from Square, to Square, promotion Piece) error {
+	board, err := g.planMove(from, to, promotion)
+	if err != nil {
+		return err
+	}
+	g.positions = append(g.positions, board)
 	return nil
 }

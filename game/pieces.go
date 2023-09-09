@@ -3,9 +3,15 @@ package game
 import "math/rand"
 
 type Piece interface {
-	pieceMover
+	PieceMover
 	Color() PieceColor
 	Id() PieceId
+}
+
+type PieceMover interface {
+	PlanMove(from Square, to Square, g *Game) (*Board, error)
+
+	ComputeAttackedSquares(sq Square, g *Game) map[Square]bool
 }
 
 type PieceId int
@@ -25,25 +31,12 @@ func (p pieceProps) Id() PieceId {
 	return p.PieceId
 }
 
-type pieceMover interface {
-	move(from Square, to Square, g *Game) (*Board, error)
-
-	// TODO: consider global rules before making decision
-	canMove(from Square, to Square, g *Game) bool
-
-	computeAttackedSquares(sq Square, g *Game) map[Square]bool
-}
-
 type PieceColor int
 
 const (
 	PieceColor_White PieceColor = iota
 	PieceColor_Black
 )
-
-type promotablePiece interface {
-	moveAndPromote(from Square, to Square, promotion Piece, g *Game) (*Board, error)
-}
 
 // TODO: maybe less dupe?
 var (
@@ -69,7 +62,6 @@ func init() {
 	royalDeltas = append(royalDeltas, diagonalDeltas...)
 }
 
-// TODO: castling
 type King struct {
 	deltaMover
 	pieceProps
@@ -78,10 +70,12 @@ type King struct {
 func (k King) String() string {
 	return "K"
 }
-func (k King) canMove(from Square, to Square, g *Game) bool {
-	return k.deltaMover.canMove(from, to, royalDeltas, 1, g)
+
+// TODO: castling
+func (k King) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+	return k.deltaMover.planMove(from, to, royalDeltas, 1, g)
 }
-func (k King) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (k King) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return k.deltaMover.computeAttackedSquares(sq, royalDeltas, 1, g)
 }
 
@@ -93,10 +87,10 @@ type Queen struct {
 func (q Queen) String() string {
 	return "Q"
 }
-func (q Queen) canMove(from Square, to Square, g *Game) bool {
-	return q.deltaMover.canMove(from, to, royalDeltas, 0, g)
+func (q Queen) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+	return q.deltaMover.planMove(from, to, royalDeltas, 0, g)
 }
-func (q Queen) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (q Queen) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return q.deltaMover.computeAttackedSquares(sq, royalDeltas, 0, g)
 }
 
@@ -108,10 +102,10 @@ type Rook struct {
 func (r Rook) String() string {
 	return "R"
 }
-func (r Rook) canMove(from Square, to Square, g *Game) bool {
-	return r.deltaMover.canMove(from, to, perpendicularDeltas, 0, g)
+func (r Rook) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+	return r.deltaMover.planMove(from, to, perpendicularDeltas, 0, g)
 }
-func (r Rook) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (r Rook) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return r.deltaMover.computeAttackedSquares(sq, perpendicularDeltas, 0, g)
 }
 
@@ -120,10 +114,10 @@ type Bishop struct {
 	pieceProps
 }
 
-func (b Bishop) canMove(from Square, to Square, g *Game) bool {
-	return b.deltaMover.canMove(from, to, diagonalDeltas, 0, g)
+func (b Bishop) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+	return b.deltaMover.planMove(from, to, diagonalDeltas, 0, g)
 }
-func (b Bishop) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (b Bishop) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return b.deltaMover.computeAttackedSquares(sq, diagonalDeltas, 0, g)
 }
 
@@ -132,9 +126,9 @@ type Knight struct {
 	pieceProps
 }
 
-func (k Knight) canMove(from Square, to Square, g *Game) bool {
-	return k.deltaMover.canMove(from, to, knightDeltas, 1, g)
+func (k Knight) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+	return k.deltaMover.planMove(from, to, knightDeltas, 1, g)
 }
-func (k Knight) computeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (k Knight) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return k.deltaMover.computeAttackedSquares(sq, knightDeltas, 1, g)
 }

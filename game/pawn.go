@@ -25,6 +25,10 @@ func init() {
 	setPawnDeltas(PieceColor_Black, Square{File: 1, Rank: -1})
 }
 
+type PromotablePiece interface {
+	PlanMoveWithPromotion(from Square, to Square, promotion Piece, g *Game) (*Board, error)
+}
+
 // Conforms to promotablePiece, Piece
 type Pawn struct {
 	pieceProps
@@ -37,16 +41,19 @@ func (p Pawn) String() string {
 	return "p"
 }
 
-func (p Pawn) canMove(from Square, to Square, g *Game) bool {
-	_, ok := p.computePawnMovement(from, to, g)
-	return ok
+func (p Pawn) PlanMove(from Square, to Square, g *Game) (*Board, error) {
+	return p.PlanMoveWithPromotion(from, to, nil, g)
 }
 
-func (p Pawn) move(from Square, to Square, g *Game) (*Board, error) {
-	return p.moveAndPromote(from, to, nil, g)
+func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
+	attacked := p.computeNormalAttackedSquares(from, g)
+	for sq, val := range p.computeEnPassantAttackedSquares(from, g) {
+		attacked[sq] = val
+	}
+	return attacked
 }
 
-func (p Pawn) moveAndPromote(from Square, to Square, promotion Piece, g *Game) (*Board, error) {
+func (p Pawn) PlanMoveWithPromotion(from Square, to Square, promotion Piece, g *Game) (*Board, error) {
 	movement, ok := p.computePawnMovement(from, to, g)
 	if !ok {
 		return nil, fmt.Errorf("pawn: illegal move")
@@ -110,14 +117,6 @@ func (p Pawn) computeNonAttackingMovableSquares(from Square, g *Game) map[Square
 		movable[m2] = board.SquareInRange(m2)
 	}
 	return movable
-}
-
-func (p Pawn) computeAttackedSquares(from Square, g *Game) map[Square]bool {
-	attacked := p.computeNormalAttackedSquares(from, g)
-	for sq, val := range p.computeEnPassantAttackedSquares(from, g) {
-		attacked[sq] = val
-	}
-	return attacked
 }
 
 func (p Pawn) attacksNormal(from Square, to Square, g *Game) bool {
