@@ -49,7 +49,6 @@ func (p PieceColor) Opponent() PieceColor {
 	return PieceColor_Black
 }
 
-// TODO: maybe less dupe?
 var (
 	perpendicularDeltas = []Square{
 		{File: 0, Rank: 1}, {File: 0, Rank: -1},

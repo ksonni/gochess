@@ -20,7 +20,7 @@ func main() {
 	printAttacked("Pawn", "a2", move{"a2", "a2"})
 	printAttacked("Pawn", "h2", move{"h2", "h2"})
 
-	// empassant allowed
+	// Empassant allowed
 	printAttacked("Pawn", "d4",
 		move{"a2", "a3"}, move{"d7", "d5"},
 		move{"a3", "a4"}, move{"d5", "d4"},
@@ -46,6 +46,35 @@ func main() {
 	fmt.Println("Black in check", g.IsSideInCheck(game.PieceColor_Black, &board))
 	board.JumpPiece(game.MustSquare("e3"), game.MustSquare("e4"))
 	fmt.Println("Black in check", g.IsSideInCheck(game.PieceColor_Black, &board))
+
+	// Castling queen side
+	g = game.NewGame()
+	board = *g.Board()
+	board.ClearSquare(game.MustSquare("b1"))
+	board.ClearSquare(game.MustSquare("c1"))
+	board.ClearSquare(game.MustSquare("d1"))
+	if err := g.Move(game.MustSquare("e1"), game.MustSquare("c1")); err != nil {
+		fmt.Printf("castling failed! %v\n", err)
+	} else {
+		fmt.Println("Queen side castling success")
+		fmt.Println(g.Board().GetPiece(game.MustSquare("c1")))
+		fmt.Println(g.Board().GetPiece(game.MustSquare("d1")))
+		fmt.Println(g.Board().GetPiece(game.MustSquare("a1")))
+	}
+
+	// Castling king side
+	g = game.NewGame()
+	board = *g.Board()
+	board.ClearSquare(game.MustSquare("f1"))
+	board.ClearSquare(game.MustSquare("g1"))
+	if err := g.Move(game.MustSquare("e1"), game.MustSquare("g1")); err != nil {
+		fmt.Printf("castling failed! %v\n", err)
+	} else {
+		fmt.Println("King side castling success")
+		fmt.Println(g.Board().GetPiece(game.MustSquare("g1")))
+		fmt.Println(g.Board().GetPiece(game.MustSquare("f1")))
+		fmt.Println(g.Board().GetPiece(game.MustSquare("h1")))
+	}
 }
 
 type move = [2]string
