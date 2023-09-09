@@ -48,3 +48,12 @@ func (board Board) SquareInRange(square Square) bool {
 	return square.File >= 0 && square.File < board.NumFiles() &&
 		square.Rank >= 0 && square.Rank < board.NumRanks()
 }
+
+func (board Board) GetKingSquare(color PieceColor) (*Square, bool) {
+	for square, piece := range board {
+		if k, ok := piece.(King); ok && k.Color() == color {
+			return &square, true
+		}
+	}
+	return nil, false
+}

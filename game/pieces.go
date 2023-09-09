@@ -38,6 +38,16 @@ const (
 	PieceColor_Black
 )
 
+func (p PieceColor) Opponent() PieceColor {
+	switch p {
+	case PieceColor_White:
+		return PieceColor_Black
+	case PieceColor_Black:
+		return PieceColor_White
+	}
+	return PieceColor_Black
+}
+
 // TODO: maybe less dupe?
 var (
 	perpendicularDeltas = []Square{

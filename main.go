@@ -38,6 +38,14 @@ func main() {
 	g := game.NewGame()
 	g.Move(game.MustSquare("e2"), game.MustSquare("e4"))
 	fmt.Println(g.ComputeSquaresAttackedBySide(game.PieceColor_White, g.Board()))
+
+	// Check computation
+	g = game.NewGame()
+	board := g.Board().Clone()
+	board.JumpPiece(game.MustSquare("e8"), game.MustSquare("e3"))
+	fmt.Println("Black in check", g.IsSideInCheck(game.PieceColor_Black, &board))
+	board.JumpPiece(game.MustSquare("e3"), game.MustSquare("e4"))
+	fmt.Println("Black in check", g.IsSideInCheck(game.PieceColor_Black, &board))
 }
 
 type move = [2]string

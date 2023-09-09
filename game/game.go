@@ -5,6 +5,7 @@ import "fmt"
 type Game struct {
 	positions []*Board
 	initializer
+	boardAnalyzer
 }
 
 func NewGame() *Game {
@@ -45,6 +46,10 @@ func (g *Game) MoveWithPromotion(from Square, to Square, promotion Piece) error 
 	return g.move(from, to, promotion)
 }
 
+func (g *Game) ComputeSquaresAttackedBySide(color PieceColor, board *Board) map[Square]bool {
+	return g.boardAnalyzer.computeSquaresAttackedBySide(color, board, g)
+}
+
 func (g *Game) ComputeAttackedSquares(from Square) map[Square]bool {
 	piece, exists := g.Board().GetPiece(from)
 	if !exists {
@@ -53,18 +58,9 @@ func (g *Game) ComputeAttackedSquares(from Square) map[Square]bool {
 	return piece.ComputeAttackedSquares(from, g)
 }
 
-func (g *Game) ComputeSquaresAttackedBySide(color PieceColor, board *Board) map[Square]bool {
-	attacked := make(map[Square]bool)
-	for square, piece := range *board {
-		if piece.Color() != color {
-			continue
-		}
-		pieceAttacked := piece.ComputeAttackedSquares(square, g)
-		for pieceSquare, val := range pieceAttacked {
-			attacked[pieceSquare] = val
-		}
-	}
-	return attacked
+func (g *Game) IsSideInCheck(color PieceColor, board *Board) bool {
+	attackMap := g.ComputeSquaresAttackedBySide(color.Opponent(), board)
+	return g.boardAnalyzer.isSideInCheck(color, attackMap, board, g)
 }
 
 // Moves use a 1 based index because move 0 is a valid position
