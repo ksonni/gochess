@@ -5,4 +5,4 @@ run:
 	make build && ./gochess
 
 test:
-	go test ./...
+	go test ./... -v
