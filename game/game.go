@@ -8,6 +8,12 @@ type Game struct {
 	boardAnalyzer
 }
 
+type Move struct {
+	From      Square
+	To        Square
+	Promotion Piece
+}
+
 func NewGame() *Game {
 	game := new(Game)
 	board := make(Board)
@@ -28,22 +34,6 @@ func (g *Game) Board() *Board {
 
 func (g *Game) PreviousBoard() (*Board, bool) {
 	return g.BoardAtMove(g.NumMoves() - 1)
-}
-
-func (g *Game) PlanMove(from Square, to Square) (*Board, error) {
-	return g.planMove(from, to, nil)
-}
-
-func (g *Game) PlanMoveWithPromotionLocally(from Square, to Square, promotion Piece) (*Board, error) {
-	return g.planMove(from, to, promotion)
-}
-
-func (g *Game) Move(from Square, to Square) error {
-	return g.move(from, to, nil)
-}
-
-func (g *Game) MoveWithPromotion(from Square, to Square, promotion Piece) error {
-	return g.move(from, to, promotion)
 }
 
 func (g *Game) ComputeSquaresAttackedBySide(color PieceColor, board *Board) map[Square]bool {
@@ -126,9 +116,8 @@ func (g *Game) SquareHasChangedSinceMove(sq Square, move int) bool {
 	return false
 }
 
-// Helpers
-
-func (g *Game) planMove(from Square, to Square, promotion Piece) (*Board, error) {
+func (g *Game) PlanMove(move Move) (*Board, error) {
+	from, to, promotion := move.From, move.To, move.Promotion
 	piece, exists := g.Board().GetPiece(from)
 	if !exists {
 		return nil, fmt.Errorf("game: no piece exists at %s", from)
@@ -141,7 +130,7 @@ func (g *Game) planMove(from Square, to Square, promotion Piece) (*Board, error)
 	var err error
 
 	if promotion == nil {
-		nextPos, err = piece.PlanMoveLocally(from, to, g)
+		nextPos, err = piece.PlanMoveLocally(move, g)
 	} else if promoPiece, ok := piece.(PromotablePiece); ok {
 		nextPos, err = promoPiece.PlanMoveWithPromotionLocally(from, to, promotion, g)
 	} else {
@@ -157,8 +146,8 @@ func (g *Game) planMove(from Square, to Square, promotion Piece) (*Board, error)
 	return nextPos, nil
 }
 
-func (g *Game) move(from Square, to Square, promotion Piece) error {
-	board, err := g.planMove(from, to, promotion)
+func (g *Game) Move(move Move) error {
+	board, err := g.PlanMove(move)
 	if err != nil {
 		return err
 	}

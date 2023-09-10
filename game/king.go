@@ -20,7 +20,8 @@ func (k King) String() string {
 	return "K"
 }
 
-func (k King) PlanMoveLocally(from Square, to Square, g *Game) (*Board, error) {
+func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
+	from, to := move.From, move.To
 	// First check if normal movement possible
 	result, err := k.deltaMover.planMove(from, to, royalDeltas, 1, g)
 	if err == nil {

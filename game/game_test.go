@@ -32,18 +32,20 @@ type testMove struct {
 	to   string
 }
 
+func (m testMove) Move() Move {
+	return Move{From: sq(m.from), To: sq(m.to)}
+}
+
 func playGame(title string, moves []testMove, jump bool, t *testing.T) *Game {
 	g := NewGame()
 	for _, move := range moves {
-		fromSq := sq(move.from)
-		toSq := sq(move.to)
 		if !jump {
-			if err := g.Move(fromSq, toSq); err != nil {
-				t.Errorf("%s: move %s to %s failed: %v", title, fromSq, toSq, err)
+			if err := g.Move(move.Move()); err != nil {
+				t.Errorf("%s: move %s to %s failed: %v", title, move.from, move.to, err)
 				return g
 			}
 		} else {
-			g.Board().JumpPiece(fromSq, toSq)
+			g.Board().JumpPiece(sq(move.from), sq(move.to))
 		}
 	}
 	return g

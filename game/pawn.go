@@ -41,10 +41,6 @@ func (p Pawn) String() string {
 	return "p"
 }
 
-func (p Pawn) PlanMoveLocally(from Square, to Square, g *Game) (*Board, error) {
-	return p.PlanMoveWithPromotionLocally(from, to, nil, g)
-}
-
 func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
 	attacked := p.computeNormalAttackedSquares(from, g)
 	for sq, val := range p.computeEnPassantAttackedSquares(from, g) {
@@ -53,7 +49,8 @@ func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
 	return attacked
 }
 
-func (p Pawn) PlanMoveWithPromotionLocally(from Square, to Square, promotion Piece, g *Game) (*Board, error) {
+func (p Pawn) PlanMoveLocally(move Move, g *Game) (*Board, error) {
+	from, to, promotion := move.From, move.To, move.Promotion
 	movement, ok := p.computePawnMovement(from, to, g)
 	if !ok {
 		return nil, fmt.Errorf("pawn: illegal move")

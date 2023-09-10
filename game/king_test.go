@@ -93,12 +93,12 @@ func TestCastling(t *testing.T) {
 		g := NewGame()
 		clearSquares(g, config.clearSquares...)
 		for i, move := range config.otherMoves {
-			if err := g.Move(sq(move.from), sq(move.to)); err != nil {
+			if err := g.Move(move.Move()); err != nil {
 				t.Errorf("%s: move %d failed - %s to %s: %v", title, i+1, move.from, move.to, err)
 			}
 		}
 		kingMove, rookMove, mustFail := config.kingMove, config.rookMove, config.mustFail
-		err := g.Move(sq(kingMove.from), sq(kingMove.to))
+		err := g.Move(kingMove.Move())
 		if mustFail {
 			if err == nil {
 				t.Errorf("%s: castling did not fail when expected", title)
