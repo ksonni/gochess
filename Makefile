@@ -3,3 +3,6 @@ build:
 
 run:
 	make build && ./gochess
+
+test:
+	go test ./...
