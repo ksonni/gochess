@@ -60,10 +60,10 @@ func (p Pawn) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 	board.JumpPiece(from, to)
 
 	if movement.mustPromote {
-		if promotion != nil && p.canPromoteTo(promotion) {
-			board.SetPiece(promotion, to)
+		if promotion == nil || !p.canPromoteTo(promotion) {
+			return nil, fmt.Errorf("pawn: either no piece or an invalid has been provided for promotion")
 		}
-		return nil, fmt.Errorf("pawn: promotion required, normal movement not possible")
+		board.SetPiece(promotion, to)
 	}
 	if movement.secondaryCapture != nil {
 		board.ClearSquare(*movement.secondaryCapture)
@@ -80,7 +80,7 @@ type pawnMovement struct {
 
 func (p Pawn) computePawnMovement(from Square, to Square, g *Game) (*pawnMovement, bool) {
 	defaultMovement := pawnMovement{mustPromote: p.promotionRank(g) == to.Rank}
-	movement := new(pawnMovement)
+	var movement *pawnMovement
 	board := g.Board()
 
 	if nonAttacking := p.computeNonAttackingMovableSquares(from, g); nonAttacking[to] {
@@ -97,6 +97,7 @@ func (p Pawn) computePawnMovement(from Square, to Square, g *Game) (*pawnMovemen
 			movement = &defaultMovement
 		}
 	}
+
 	return movement, movement != nil
 }
 
