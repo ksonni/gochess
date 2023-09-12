@@ -17,18 +17,18 @@ type PieceMover interface {
 
 type PieceId int
 
-type pieceProps struct {
+type PieceProps struct {
 	PieceColor PieceColor
 	PieceId    PieceId
 }
 
-func newPieceProps(color PieceColor) pieceProps {
-	return pieceProps{PieceColor: color, PieceId: PieceId(rand.Int())}
+func NewPieceProps(color PieceColor) PieceProps {
+	return PieceProps{PieceColor: color, PieceId: PieceId(rand.Int())}
 }
-func (p pieceProps) Color() PieceColor {
+func (p PieceProps) Color() PieceColor {
 	return p.PieceColor
 }
-func (p pieceProps) Id() PieceId {
+func (p PieceProps) Id() PieceId {
 	return p.PieceId
 }
 
@@ -74,7 +74,7 @@ func init() {
 
 type Queen struct {
 	deltaMover
-	pieceProps
+	PieceProps
 }
 
 func (q Queen) String() string {
@@ -89,7 +89,7 @@ func (q Queen) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 
 type Rook struct {
 	deltaMover
-	pieceProps
+	PieceProps
 }
 
 func (r Rook) String() string {
@@ -104,7 +104,7 @@ func (r Rook) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 
 type Bishop struct {
 	deltaMover
-	pieceProps
+	PieceProps
 }
 
 func (b Bishop) PlanMoveLocally(move Move, g *Game) (*Board, error) {
@@ -116,7 +116,7 @@ func (b Bishop) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 
 type Knight struct {
 	deltaMover
-	pieceProps
+	PieceProps
 }
 
 func (k Knight) PlanMoveLocally(move Move, g *Game) (*Board, error) {

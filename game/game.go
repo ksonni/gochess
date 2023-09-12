@@ -117,25 +117,15 @@ func (g *Game) SquareHasChangedSinceMove(sq Square, move int) bool {
 }
 
 func (g *Game) PlanMove(move Move) (*Board, error) {
-	from, to, promotion := move.From, move.To, move.Promotion
-	piece, exists := g.Board().GetPiece(from)
+	piece, exists := g.Board().GetPiece(move.From)
 	if !exists {
-		return nil, fmt.Errorf("game: no piece exists at %s", from)
+		return nil, fmt.Errorf("game: no piece exists at %s", move.From)
 	}
 	if !g.SideCanMove(piece.Color()) {
 		return nil, fmt.Errorf("game: attempted to move piece out of turn")
 	}
 
-	var nextPos *Board
-	var err error
-
-	if promotion == nil {
-		nextPos, err = piece.PlanMoveLocally(move, g)
-	} else if promoPiece, ok := piece.(PromotablePiece); ok {
-		nextPos, err = promoPiece.PlanMoveWithPromotionLocally(from, to, promotion, g)
-	} else {
-		return nil, fmt.Errorf("game: piece at %s doesn't support promotion", from)
-	}
+	nextPos, err := piece.PlanMoveLocally(move, g)
 	if err != nil {
 		return nil, fmt.Errorf("game: move failed: %v", err)
 	}
