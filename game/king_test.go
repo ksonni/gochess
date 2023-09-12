@@ -81,7 +81,7 @@ func TestCastling(t *testing.T) {
 				{"a7", "a6"},
 				{"a4", "a5"},
 				{"h7", "h8"}, // rook moves back
-				{"a5", "a6"},
+				{"b2", "b3"},
 			},
 			kingMove: testMove{"e8", "g8"},
 			rookMove: testMove{"h8", "f8"},

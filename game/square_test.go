@@ -22,5 +22,11 @@ func assertAttackedSquaresEqual(title string, got map[Square]bool, want []string
 	}
 }
 
+func assertSquareEmpty(title string, square string, board *Board, t *testing.T) {
+	if piece, exists := board.GetPiece(sq(square)); exists {
+		t.Errorf("%s: found a piece on %s when none should be present: %v", title, square, piece)
+	}
+}
+
 // Shorthand for MustSquare
 var sq = MustSquare
