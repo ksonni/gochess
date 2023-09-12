@@ -25,13 +25,9 @@ func init() {
 	setPawnDeltas(PieceColor_Black, Square{File: 1, Rank: -1})
 }
 
-type PromotablePiece interface {
-	PlanMoveWithPromotionLocally(from Square, to Square, promotion Piece, g *Game) (*Board, error)
-}
-
 // Conforms to promotablePiece, Piece
 type Pawn struct {
-	pieceProps
+	PieceProps
 }
 
 func (p Pawn) Color() PieceColor {
@@ -61,7 +57,7 @@ func (p Pawn) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 
 	if movement.mustPromote {
 		if promotion == nil || !p.canPromoteTo(promotion) {
-			return nil, fmt.Errorf("pawn: either no piece or an invalid has been provided for promotion")
+			return nil, fmt.Errorf("pawn: either no piece or an invalid one has been provided for promotion")
 		}
 		board.SetPiece(promotion, to)
 	}

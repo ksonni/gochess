@@ -17,14 +17,14 @@ func (i *initializer) initializePieces(board *Board) {
 
 func (i *initializer) populatePieces(board *Board, color PieceColor, rank int) {
 	pieces := []Piece{
-		Rook{pieceProps: newPieceProps(color)},
-		Knight{pieceProps: newPieceProps(color)},
-		Bishop{pieceProps: newPieceProps(color)},
-		Queen{pieceProps: newPieceProps(color)},
-		King{pieceProps: newPieceProps(color)},
-		Bishop{pieceProps: newPieceProps(color)},
-		Knight{pieceProps: newPieceProps(color)},
-		Rook{pieceProps: newPieceProps(color)},
+		Rook{PieceProps: NewPieceProps(color)},
+		Knight{PieceProps: NewPieceProps(color)},
+		Bishop{PieceProps: NewPieceProps(color)},
+		Queen{PieceProps: NewPieceProps(color)},
+		King{PieceProps: NewPieceProps(color)},
+		Bishop{PieceProps: NewPieceProps(color)},
+		Knight{PieceProps: NewPieceProps(color)},
+		Rook{PieceProps: NewPieceProps(color)},
 	}
 	for file, piece := range pieces {
 		board.SetPiece(piece, Square{File: file, Rank: rank})
@@ -34,7 +34,7 @@ func (i *initializer) populatePieces(board *Board, color PieceColor, rank int) {
 func (i *initializer) populatePawns(board *Board, color PieceColor, rank int) {
 	for file := 0; file < board.NumFiles(); file++ {
 		board.SetPiece(
-			Pawn{pieceProps: newPieceProps(color)},
+			Pawn{PieceProps: NewPieceProps(color)},
 			Square{File: file, Rank: rank},
 		)
 	}

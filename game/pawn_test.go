@@ -46,7 +46,7 @@ func TestPawnAttackedSquares(t *testing.T) {
 	}, t)
 }
 
-func TestEmpassant(t *testing.T) {
+func TestEnPassant(t *testing.T) {
 	var tests = map[string]struct {
 		setupMoves    []testMove
 		move          testMove
@@ -87,6 +87,65 @@ func TestEmpassant(t *testing.T) {
 	}
 }
 
+func TestPromotion(t *testing.T) {
+	var tests = map[string]struct {
+		pawnSquare string
+		move       testMove
+		setupMoves []testMove
+		promoted   Piece
+		mustFail   bool
+	}{
+		"Can promote to knight": {
+			pawnSquare: "a2",
+			move:       testMove{"a7", "a8"},
+			promoted:   Knight{PieceProps: NewPieceProps(PieceColor_White)},
+		},
+		"Can promote to bishop": {
+			pawnSquare: "a2",
+			move:       testMove{"a7", "a8"},
+			promoted:   Bishop{PieceProps: NewPieceProps(PieceColor_White)},
+		},
+		"Can promote to rook": {
+			pawnSquare: "a2",
+			move:       testMove{"a7", "a8"},
+			promoted:   Rook{PieceProps: NewPieceProps(PieceColor_White)},
+		},
+		"Can promote to queen": {
+			pawnSquare: "a2",
+			move:       testMove{"a7", "a8"},
+			promoted:   Rook{PieceProps: NewPieceProps(PieceColor_White)},
+		},
+		"Can't promote to king": {
+			pawnSquare: "a2",
+			move:       testMove{"a7", "a8"},
+			promoted:   King{PieceProps: NewPieceProps(PieceColor_White)},
+			mustFail:   true,
+		},
+		"Can't promote to another pawn": {
+			pawnSquare: "a2",
+			move:       testMove{"a7", "a8"},
+			promoted:   Pawn{PieceProps: NewPieceProps(PieceColor_White)},
+			mustFail:   true,
+		},
+		"Can't promote to piece of a different color": {
+			pawnSquare: "a2",
+			move:       testMove{"a7", "a8"},
+			promoted:   Pawn{PieceProps: NewPieceProps(PieceColor_Black)},
+			mustFail:   true,
+		},
+		"Can promote a black piece": {
+			pawnSquare: "a7",
+			move:       testMove{"a2", "a1"},
+			setupMoves: []testMove{{"e2", "e4"}},
+			promoted:   Queen{PieceProps: NewPieceProps(PieceColor_White)},
+			mustFail:   true,
+		},
+	}
+	for title, test := range tests {
+		testPromotion(title, test.pawnSquare, test.move, test.setupMoves, test.promoted, test.mustFail, t)
+	}
+}
+
 // Helpers
 
 func testEnPassant(title string, setupMoves []testMove, enPassant testMove,
@@ -111,6 +170,32 @@ func testEnPassant(title string, setupMoves []testMove, enPassant testMove,
 	assertSquareEmpty(title, enPassant.from, b, t)
 	assertPawn(title, enPassant.to, piece.Color(), b, t)
 	assertSquareEmpty(title, capturedSq, b, t)
+}
+
+func testPromotion(title string, pawnSquare string, promotionMove testMove,
+	setupMoves []testMove, promoted Piece, mustFail bool, t *testing.T) {
+	g := playGame(title, setupMoves, false, t)
+	clearSquares(g, promotionMove.from, promotionMove.to)
+	g.Board().JumpPiece(sq(pawnSquare), sq(promotionMove.from))
+	move := Move{
+		From:      sq(promotionMove.from),
+		To:        sq(promotionMove.to),
+		Promotion: promoted,
+	}
+	if err := g.Move(move); err != nil {
+		if !mustFail {
+			t.Errorf("%s: promotion failed: %v", title, err)
+		}
+		return
+	}
+	if mustFail {
+		t.Errorf("%s: invalid promotion from %s to %s succeeded",
+			title, promotionMove.from, promotionMove.to)
+		return
+	}
+	if piece, ok := g.Board().GetPiece(sq(promotionMove.to)); !ok || piece.Id() != promoted.Id() {
+		t.Errorf("%s: promoted piece not found on %s", title, promotionMove.to)
+	}
 }
 
 func assertPawn(title string, square string, color PieceColor, board *Board, t *testing.T) {

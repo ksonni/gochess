@@ -6,7 +6,7 @@ import (
 )
 
 type King struct {
-	pieceProps
+	PieceProps
 	deltaMover deltaMover
 }
 
