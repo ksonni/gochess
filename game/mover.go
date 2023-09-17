@@ -39,7 +39,7 @@ func (mover deltaMover) planMove(from Square, to Square, deltas []Square,
 	}
 	b := game.Board().Clone()
 	b.jumpPiece(from, to)
-	return &b, nil
+	return b, nil
 }
 
 func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, game *Game) map[Square]bool {

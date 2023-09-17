@@ -4,7 +4,7 @@ type boardAnalyzer struct{}
 
 func (a boardAnalyzer) computeSquaresAttackedBySide(color PieceColor, board *Board, g *Game) map[Square]bool {
 	attacked := make(map[Square]bool)
-	for square, piece := range *board {
+	for square, piece := range board.pieces {
 		if piece.Color() != color {
 			continue
 		}

@@ -64,7 +64,7 @@ func (p Pawn) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 	if movement.secondaryCapture != nil {
 		board.clearSquare(*movement.secondaryCapture)
 	}
-	return &board, nil
+	return board, nil
 }
 
 // Helpers
