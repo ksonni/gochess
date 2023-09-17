@@ -29,14 +29,6 @@ func (g *Game) Board() *Board {
 	return g.position.board
 }
 
-func (g *Game) PreviousBoard() (*Board, bool) {
-	p, exists := g.position.Previous()
-	if !exists {
-		return nil, false
-	}
-	return p.Board()
-}
-
 func (g *Game) ComputeSquaresAttackedBySide(color PieceColor, board *Board) map[Square]bool {
 	return g.boardAnalyzer.computeSquaresAttackedBySide(color, board, g)
 }
@@ -54,42 +46,12 @@ func (g *Game) IsSideInCheck(color PieceColor, board *Board) bool {
 	return g.boardAnalyzer.isSideInCheck(color, attackMap, board, g)
 }
 
-func (g *Game) PieceAtPreviousMove(square Square) (Piece, bool) {
-	board, ok := g.PreviousBoard()
-	if !ok {
-		return nil, false
-	}
-	return board.GetPiece(square)
-}
-
-func (g *Game) PiecePositionAtPreviousMove(piece Piece) (*Square, bool) {
-	board, ok := g.PreviousBoard()
-	if !ok {
-		return nil, false
-	}
-	for square, p := range *board {
-		if p.Id() == piece.Id() {
-			return &square, true
-		}
-	}
-	return nil, false
-}
-
 func (g *Game) NumMoves() int {
 	return g.numMoves
 }
 
 func (g *Game) SideCanMove(color PieceColor) bool {
 	return g.NumMoves()%2 == int(color)
-}
-
-func (g *Game) SquareHasEverChanged(sq Square) bool {
-	for pos := g.position; pos != nil && pos.previous != nil; pos = pos.previous {
-		if !pos.board.HasSamePiece(pos.previous.board, sq) {
-			return true
-		}
-	}
-	return false
 }
 
 func (g *Game) PlanMove(move Move) (*Board, error) {
@@ -120,4 +82,9 @@ func (g *Game) Move(move Move) error {
 	g.position = g.position.Appending(board)
 	g.numMoves += 1
 	return nil
+}
+
+func (g *Game) Position() *Position {
+	p := g.position.Clone() // Defensive copy
+	return &p
 }

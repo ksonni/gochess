@@ -30,6 +30,7 @@ func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 
 	// Attempt castling
 	board := g.Board().Clone()
+	position := g.Position()
 	attackMap := g.ComputeSquaresAttackedBySide(k.Color().Opponent(), &board)
 
 	// King must not be in check
@@ -38,7 +39,7 @@ func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 	}
 
 	// Castling - king must never have moved
-	if g.SquareHasEverChanged(from) {
+	if position.SquareHasEverChanged(from) {
 		return nil, fmt.Errorf("king: castling not possible, king has moved in the past")
 	}
 
@@ -49,7 +50,7 @@ func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 		}
 		rookSquare := Square{File: config.rookStartFile, Rank: from.Rank}
 		// Rook must never have moved
-		if g.SquareHasEverChanged(rookSquare) {
+		if position.SquareHasEverChanged(rookSquare) {
 			return nil, fmt.Errorf("king: castling not possible, rook has moved in the past")
 		}
 		// Path must not be under attack
