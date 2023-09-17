@@ -3,9 +3,10 @@ package game
 import "fmt"
 
 type Game struct {
-	positions []*Board
+	position *Position
 	initializer
 	boardAnalyzer
+	numMoves int
 }
 
 type Move struct {
@@ -18,22 +19,22 @@ func NewGame() *Game {
 	game := new(Game)
 	board := make(Board)
 
-	game.positions = []*Board{&board}
+	game.position = &Position{board: &board}
 	game.initializePieces(game.Board())
 
 	return game
 }
 
 func (g *Game) Board() *Board {
-	board, exists := g.BoardAtMove(g.NumMoves())
-	if !exists {
-		panic("game: initialized without a board")
-	}
-	return board
+	return g.position.board
 }
 
 func (g *Game) PreviousBoard() (*Board, bool) {
-	return g.BoardAtMove(g.NumMoves() - 1)
+	p, exists := g.position.Previous()
+	if !exists {
+		return nil, false
+	}
+	return p.Board()
 }
 
 func (g *Game) ComputeSquaresAttackedBySide(color PieceColor, board *Board) map[Square]bool {
@@ -53,25 +54,16 @@ func (g *Game) IsSideInCheck(color PieceColor, board *Board) bool {
 	return g.boardAnalyzer.isSideInCheck(color, attackMap, board, g)
 }
 
-// Moves use a 1 based index because move 0 is a valid position
-func (g *Game) BoardAtMove(move int) (*Board, bool) {
-	size := len(g.positions)
-	if move < 0 || move >= size {
-		return nil, false
-	}
-	return g.positions[move], true
-}
-
-func (g *Game) PieceAtMove(move int, square Square) (Piece, bool) {
-	board, ok := g.BoardAtMove(move)
+func (g *Game) PieceAtPreviousMove(square Square) (Piece, bool) {
+	board, ok := g.PreviousBoard()
 	if !ok {
 		return nil, false
 	}
 	return board.GetPiece(square)
 }
 
-func (g *Game) PiecePositionAtMove(move int, piece Piece) (*Square, bool) {
-	board, ok := g.BoardAtMove(move)
+func (g *Game) PiecePositionAtPreviousMove(piece Piece) (*Square, bool) {
+	board, ok := g.PreviousBoard()
 	if !ok {
 		return nil, false
 	}
@@ -84,32 +76,16 @@ func (g *Game) PiecePositionAtMove(move int, piece Piece) (*Square, bool) {
 }
 
 func (g *Game) NumMoves() int {
-	return len(g.positions) - 1
+	return g.numMoves
 }
 
 func (g *Game) SideCanMove(color PieceColor) bool {
 	return g.NumMoves()%2 == int(color)
 }
 
-func (g *Game) SquareHasSamePieceAtMoves(sq Square, move1 int, move2 int) bool {
-	if move1 < 0 || move2 < 0 || move1 > g.NumMoves() || move2 > g.NumMoves() {
-		return false
-	}
-	p1, _ := g.positions[move1].GetPiece(sq)
-	p2, _ := g.positions[move2].GetPiece(sq)
-	if p1 == nil && p2 == nil {
-		return true
-	}
-	if p1 == nil || p2 == nil {
-		return false
-	}
-	return p1.Id() == p2.Id()
-}
-
-func (g *Game) SquareHasChangedSinceMove(sq Square, move int) bool {
-	current := g.NumMoves()
-	for i := move; i < len(g.positions); i++ {
-		if !g.SquareHasSamePieceAtMoves(sq, i, current) {
+func (g *Game) SquareHasEverChanged(sq Square) bool {
+	for pos := g.position; pos != nil && pos.previous != nil; pos = pos.previous {
+		if !pos.board.HasSamePiece(pos.previous.board, sq) {
 			return true
 		}
 	}
@@ -141,6 +117,7 @@ func (g *Game) Move(move Move) error {
 	if err != nil {
 		return err
 	}
-	g.positions = append(g.positions, board)
+	g.position = g.position.Appending(board)
+	g.numMoves += 1
 	return nil
 }
