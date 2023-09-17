@@ -31,7 +31,7 @@ func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 	// Attempt castling
 	board := g.Board().Clone()
 	position := g.Position()
-	attackMap := g.ComputeSquaresAttackedBySide(k.Color().Opponent(), &board)
+	attackMap := g.ComputeSquaresAttackedBySide(k.Color().Opponent(), board)
 
 	// King must not be in check
 	if attackMap[from] {
@@ -43,7 +43,7 @@ func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 		return nil, fmt.Errorf("king: castling not possible, king has moved in the past")
 	}
 
-	for _, config := range k.castleConfigs(&board) {
+	for _, config := range k.castleConfigs(board) {
 		kingTargetSquare := from.Adding(config.kingDelta)
 		if kingTargetSquare != to {
 			continue
@@ -54,12 +54,12 @@ func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 			return nil, fmt.Errorf("king: castling not possible, rook has moved in the past")
 		}
 		// Path must not be under attack
-		if !k.castlePathSafe(from, kingTargetSquare, attackMap, &board) {
+		if !k.castlePathSafe(from, kingTargetSquare, attackMap, board) {
 			return nil, fmt.Errorf("king: castling not possible, path is attacked/obstructed")
 		}
 		board.jumpPiece(from, kingTargetSquare)
 		board.jumpPiece(rookSquare, rookSquare.Adding(config.rookDelta))
-		return &board, nil
+		return board, nil
 	}
 	return nil, fmt.Errorf("king: not a valid castling move")
 }

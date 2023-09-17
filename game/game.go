@@ -17,11 +17,8 @@ type Move struct {
 
 func NewGame() *Game {
 	game := new(Game)
-	board := make(Board)
-
-	game.position = &Position{board: &board}
+	game.position = &Position{board: NewBoard()}
 	game.initializePieces(game.Board())
-
 	return game
 }
 

@@ -5,10 +5,16 @@ const (
 	boardNumRanks = 8
 )
 
-type Board map[Square]Piece
+type Board struct {
+	pieces map[Square]Piece
+}
+
+func NewBoard() *Board {
+	return &Board{pieces: make(map[Square]Piece)}
+}
 
 func (board *Board) GetPiece(square Square) (Piece, bool) {
-	piece, exists := (*board)[square]
+	piece, exists := board.pieces[square]
 	return piece, exists
 }
 
@@ -20,10 +26,10 @@ func (board *Board) NumFiles() int {
 	return boardNumFiles
 }
 
-func (board *Board) Clone() Board {
-	copy := make(Board)
-	for k, v := range *board {
-		copy[k] = v
+func (board *Board) Clone() *Board {
+	copy := NewBoard()
+	for k, v := range board.pieces {
+		copy.pieces[k] = v
 	}
 	return copy
 }
@@ -34,7 +40,7 @@ func (board *Board) SquareInRange(square Square) bool {
 }
 
 func (board *Board) GetKingSquare(color PieceColor) (*Square, bool) {
-	for square, piece := range *board {
+	for square, piece := range board.pieces {
 		if k, ok := piece.(King); ok && k.Color() == color {
 			return &square, true
 		}
@@ -55,7 +61,7 @@ func (board *Board) HasSamePiece(other *Board, square Square) bool {
 }
 
 func (board *Board) FindPiece(piece Piece) (*Square, bool) {
-	for square, p := range *board {
+	for square, p := range board.pieces {
 		if p.Id() == piece.Id() {
 			return &square, true
 		}
@@ -64,11 +70,11 @@ func (board *Board) FindPiece(piece Piece) (*Square, bool) {
 }
 
 func (board *Board) setPiece(piece Piece, square Square) {
-	(*board)[square] = piece
+	board.pieces[square] = piece
 }
 
 func (board *Board) clearSquare(square Square) {
-	delete(*board, square)
+	delete(board.pieces, square)
 }
 
 func (board *Board) jumpPiece(start Square, end Square) {

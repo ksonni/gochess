@@ -16,11 +16,11 @@ func TestIsSideInCheck(t *testing.T) {
 	g := NewGame()
 	board := g.Board().Clone()
 	board.jumpPiece(sq("e8"), sq("e3"))
-	if !g.IsSideInCheck(PieceColor_Black, &board) {
+	if !g.IsSideInCheck(PieceColor_Black, board) {
 		t.Errorf("Black must be in check")
 	}
 	board.jumpPiece(sq("e3"), sq("e4"))
-	if g.IsSideInCheck(PieceColor_Black, &board) {
+	if g.IsSideInCheck(PieceColor_Black, board) {
 		t.Errorf("Black must not be in check")
 	}
 }
