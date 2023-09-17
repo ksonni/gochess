@@ -69,3 +69,12 @@ func (board *Board) HasSamePiece(other *Board, square Square) bool {
 	}
 	return p1.Id() == p2.Id()
 }
+
+func (board *Board) FindPiece(piece Piece) (*Square, bool) {
+	for square, p := range *board {
+		if p.Id() == piece.Id() {
+			return &square, true
+		}
+	}
+	return nil, false
+}
