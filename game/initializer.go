@@ -27,13 +27,13 @@ func (i *initializer) populatePieces(board *Board, color PieceColor, rank int) {
 		Rook{PieceProps: NewPieceProps(color)},
 	}
 	for file, piece := range pieces {
-		board.SetPiece(piece, Square{File: file, Rank: rank})
+		board.setPiece(piece, Square{File: file, Rank: rank})
 	}
 }
 
 func (i *initializer) populatePawns(board *Board, color PieceColor, rank int) {
 	for file := 0; file < board.NumFiles(); file++ {
-		board.SetPiece(
+		board.setPiece(
 			Pawn{PieceProps: NewPieceProps(color)},
 			Square{File: file, Rank: rank},
 		)

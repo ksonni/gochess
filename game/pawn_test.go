@@ -176,7 +176,7 @@ func testPromotion(title string, pawnSquare string, promotionMove testMove,
 	setupMoves []testMove, promoted Piece, mustFail bool, t *testing.T) {
 	g := playGame(title, setupMoves, false, t)
 	clearSquares(g, promotionMove.from, promotionMove.to)
-	g.Board().JumpPiece(sq(pawnSquare), sq(promotionMove.from))
+	g.Board().jumpPiece(sq(pawnSquare), sq(promotionMove.from))
 	move := Move{
 		From:      sq(promotionMove.from),
 		To:        sq(promotionMove.to),

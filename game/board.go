@@ -12,22 +12,6 @@ func (board *Board) GetPiece(square Square) (Piece, bool) {
 	return piece, exists
 }
 
-func (board *Board) SetPiece(piece Piece, square Square) {
-	(*board)[square] = piece
-}
-
-func (board *Board) ClearSquare(square Square) {
-	delete(*board, square)
-}
-
-func (board *Board) JumpPiece(start Square, end Square) {
-	piece, exists := board.GetPiece(start)
-	board.ClearSquare(start)
-	if exists {
-		board.SetPiece(piece, end)
-	}
-}
-
 func (board *Board) NumRanks() int {
 	return boardNumRanks
 }
@@ -77,4 +61,20 @@ func (board *Board) FindPiece(piece Piece) (*Square, bool) {
 		}
 	}
 	return nil, false
+}
+
+func (board *Board) setPiece(piece Piece, square Square) {
+	(*board)[square] = piece
+}
+
+func (board *Board) clearSquare(square Square) {
+	delete(*board, square)
+}
+
+func (board *Board) jumpPiece(start Square, end Square) {
+	piece, exists := board.GetPiece(start)
+	board.clearSquare(start)
+	if exists {
+		board.setPiece(piece, end)
+	}
 }
