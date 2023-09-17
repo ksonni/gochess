@@ -38,7 +38,7 @@ func (mover deltaMover) planMove(from Square, to Square, deltas []Square,
 		return nil, fmt.Errorf("board: invalid move")
 	}
 	b := game.Board().Clone()
-	b.JumpPiece(from, to)
+	b.jumpPiece(from, to)
 	return &b, nil
 }
 

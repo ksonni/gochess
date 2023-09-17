@@ -53,16 +53,16 @@ func (p Pawn) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 	}
 
 	board := g.Board().Clone()
-	board.JumpPiece(from, to)
+	board.jumpPiece(from, to)
 
 	if movement.mustPromote {
 		if promotion == nil || !p.canPromoteTo(promotion) {
 			return nil, fmt.Errorf("pawn: either no piece or an invalid one has been provided for promotion")
 		}
-		board.SetPiece(promotion, to)
+		board.setPiece(promotion, to)
 	}
 	if movement.secondaryCapture != nil {
-		board.ClearSquare(*movement.secondaryCapture)
+		board.clearSquare(*movement.secondaryCapture)
 	}
 	return &board, nil
 }

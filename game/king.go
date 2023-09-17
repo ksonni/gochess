@@ -57,8 +57,8 @@ func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 		if !k.castlePathSafe(from, kingTargetSquare, attackMap, &board) {
 			return nil, fmt.Errorf("king: castling not possible, path is attacked/obstructed")
 		}
-		board.JumpPiece(from, kingTargetSquare)
-		board.JumpPiece(rookSquare, rookSquare.Adding(config.rookDelta))
+		board.jumpPiece(from, kingTargetSquare)
+		board.jumpPiece(rookSquare, rookSquare.Adding(config.rookDelta))
 		return &board, nil
 	}
 	return nil, fmt.Errorf("king: not a valid castling move")

@@ -15,11 +15,11 @@ func TestAttackedSquaresBySide(t *testing.T) {
 func TestIsSideInCheck(t *testing.T) {
 	g := NewGame()
 	board := g.Board().Clone()
-	board.JumpPiece(sq("e8"), sq("e3"))
+	board.jumpPiece(sq("e8"), sq("e3"))
 	if !g.IsSideInCheck(PieceColor_Black, &board) {
 		t.Errorf("Black must be in check")
 	}
-	board.JumpPiece(sq("e3"), sq("e4"))
+	board.jumpPiece(sq("e3"), sq("e4"))
 	if g.IsSideInCheck(PieceColor_Black, &board) {
 		t.Errorf("Black must not be in check")
 	}
@@ -45,7 +45,7 @@ func playGame(title string, moves []testMove, jump bool, t *testing.T) *Game {
 				return g
 			}
 		} else {
-			g.Board().JumpPiece(sq(move.from), sq(move.to))
+			g.Board().jumpPiece(sq(move.from), sq(move.to))
 		}
 	}
 	return g
@@ -53,6 +53,6 @@ func playGame(title string, moves []testMove, jump bool, t *testing.T) *Game {
 
 func clearSquares(g *Game, squares ...string) {
 	for _, s := range squares {
-		g.Board().ClearSquare(sq(s))
+		g.Board().clearSquare(sq(s))
 	}
 }
