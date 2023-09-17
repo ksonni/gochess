@@ -159,7 +159,7 @@ func (p Pawn) attacksEnPassant(from Square, to Square, g *Game) bool {
 	}
 	// Enemy pawn must have moved 2 squares in the previous move
 	homeSquare := to.Subtracting(pawnHomeDelta[target.Color()])
-	if previousPiece, exists := g.PieceAtMove(g.NumMoves()-1, homeSquare); exists {
+	if previousPiece, exists := g.PieceAtPreviousMove(homeSquare); exists {
 		return previousPiece.Id() == target.Id()
 	}
 	return false
