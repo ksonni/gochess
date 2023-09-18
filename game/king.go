@@ -20,18 +20,18 @@ func (k King) String() string {
 	return "K"
 }
 
-func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
+func (k King) WithLocalMove(move Move, g *Game) (*Game, error) {
 	from, to := move.From, move.To
 	// First check if normal movement possible
 	result, err := k.deltaMover.planMove(from, to, royalDeltas, 1, g)
 	if err == nil {
-		return result, nil
+		return g.appendingPosition(result), nil
 	}
 
 	// Attempt castling
 	board := g.Board().Clone()
 	position := g.Position()
-	attackMap := g.ComputeSquaresAttackedBySide(k.Color().Opponent(), board)
+	attackMap := g.ComputeSquaresAttackedBySide(k.Color().Opponent())
 
 	// King must not be in check
 	if attackMap[from] {
@@ -59,7 +59,7 @@ func (k King) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 		}
 		board.jumpPiece(from, kingTargetSquare)
 		board.jumpPiece(rookSquare, rookSquare.Adding(config.rookDelta))
-		return board, nil
+		return g.appendingPosition(board), nil
 	}
 	return nil, fmt.Errorf("king: not a valid castling move")
 }
