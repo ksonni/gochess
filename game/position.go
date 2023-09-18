@@ -10,6 +10,11 @@ func (p *Position) Appending(board *Board) *Position {
 	return &nextPos
 }
 
+func (p *Position) Setting(board *Board) *Position {
+	nextPos := Position{board: board, previous: p.previous}
+	return &nextPos
+}
+
 func (p *Position) Clone() Position {
 	return Position{board: p.board, previous: p.previous}
 }

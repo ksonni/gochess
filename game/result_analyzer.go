@@ -2,9 +2,9 @@ package game
 
 type boardAnalyzer struct{}
 
-func (a boardAnalyzer) computeSquaresAttackedBySide(color PieceColor, board *Board, g *Game) map[Square]bool {
+func (a boardAnalyzer) computeSquaresAttackedBySide(color PieceColor, g *Game) map[Square]bool {
 	attacked := make(map[Square]bool)
-	for square, piece := range board.pieces {
+	for square, piece := range g.Board().pieces {
 		if piece.Color() != color {
 			continue
 		}

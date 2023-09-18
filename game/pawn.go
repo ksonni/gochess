@@ -45,7 +45,7 @@ func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
 	return attacked
 }
 
-func (p Pawn) PlanMoveLocally(move Move, g *Game) (*Board, error) {
+func (p Pawn) WithLocalMove(move Move, g *Game) (*Game, error) {
 	from, to, promotion := move.From, move.To, move.Promotion
 	movement, ok := p.computePawnMovement(from, to, g)
 	if !ok {
@@ -64,7 +64,7 @@ func (p Pawn) PlanMoveLocally(move Move, g *Game) (*Board, error) {
 	if movement.secondaryCapture != nil {
 		board.clearSquare(*movement.secondaryCapture)
 	}
-	return board, nil
+	return g.appendingPosition(board), nil
 }
 
 // Helpers

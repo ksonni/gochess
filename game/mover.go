@@ -1,6 +1,8 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Conforms to PieceMover
 type deltaMover struct{}
@@ -30,6 +32,15 @@ func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, m
 		}
 	}
 	return false
+}
+
+func (mover deltaMover) simulateMove(from Square, to Square, deltas []Square,
+	maxSteps int, game *Game) (*Game, error) {
+	b, err := mover.planMove(from, to, deltas, maxSteps, game)
+	if err != nil {
+		return nil, err
+	}
+	return game.appendingPosition(b), nil
 }
 
 func (mover deltaMover) planMove(from Square, to Square, deltas []Square,
