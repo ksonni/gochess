@@ -1,9 +1,17 @@
 package game
 
 // Initializes the board to start a new game
-type initializer struct{}
+type gameMaker struct{}
 
-func (i *initializer) initializePieces(board *Board) {
+func NewGame() *Game {
+	game := new(Game)
+	game.position = &Position{board: NewBoard()}
+	i := gameMaker{}
+	i.initializePieces(game.Board())
+	return game
+}
+
+func (i *gameMaker) initializePieces(board *Board) {
 	whitePiecesRank := 0
 	whitePawnsRank := whitePiecesRank + 1
 	i.populatePawns(board, PieceColor_White, whitePawnsRank)
@@ -15,7 +23,7 @@ func (i *initializer) initializePieces(board *Board) {
 	i.populatePieces(board, PieceColor_Black, blackPiecesRank)
 }
 
-func (i *initializer) populatePieces(board *Board, color PieceColor, rank int) {
+func (i *gameMaker) populatePieces(board *Board, color PieceColor, rank int) {
 	pieces := []Piece{
 		Rook{PieceProps: NewPieceProps(color)},
 		Knight{PieceProps: NewPieceProps(color)},
@@ -31,7 +39,7 @@ func (i *initializer) populatePieces(board *Board, color PieceColor, rank int) {
 	}
 }
 
-func (i *initializer) populatePawns(board *Board, color PieceColor, rank int) {
+func (i *gameMaker) populatePawns(board *Board, color PieceColor, rank int) {
 	for file := 0; file < board.NumFiles(); file++ {
 		board.setPiece(
 			Pawn{PieceProps: NewPieceProps(color)},

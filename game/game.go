@@ -5,7 +5,6 @@ import "fmt"
 type Game struct {
 	position *Position
 	numMoves int
-	initializer
 	boardAnalyzer
 }
 
@@ -13,13 +12,6 @@ type Move struct {
 	From      Square
 	To        Square
 	Promotion Piece
-}
-
-func NewGame() *Game {
-	game := new(Game)
-	game.position = &Position{board: NewBoard()}
-	game.initializePieces(game.Board())
-	return game
 }
 
 func (g *Game) Board() *Board {
