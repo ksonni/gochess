@@ -81,7 +81,7 @@ func (q Queen) String() string {
 	return "Q"
 }
 func (q Queen) WithLocalMove(move Move, g *Game) (*Game, error) {
-	return q.deltaMover.simulateMove(move.From, move.To, royalDeltas, 0, g)
+	return q.deltaMover.gameWithMove(move.From, move.To, royalDeltas, 0, g)
 }
 func (q Queen) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return q.deltaMover.computeAttackedSquares(sq, royalDeltas, 0, g)
@@ -96,7 +96,7 @@ func (r Rook) String() string {
 	return "R"
 }
 func (r Rook) WithLocalMove(move Move, g *Game) (*Game, error) {
-	return r.deltaMover.simulateMove(move.From, move.To, perpendicularDeltas, 0, g)
+	return r.deltaMover.gameWithMove(move.From, move.To, perpendicularDeltas, 0, g)
 }
 func (r Rook) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return r.deltaMover.computeAttackedSquares(sq, perpendicularDeltas, 0, g)
@@ -108,7 +108,7 @@ type Bishop struct {
 }
 
 func (b Bishop) WithLocalMove(move Move, g *Game) (*Game, error) {
-	return b.deltaMover.simulateMove(move.From, move.To, diagonalDeltas, 0, g)
+	return b.deltaMover.gameWithMove(move.From, move.To, diagonalDeltas, 0, g)
 }
 func (b Bishop) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return b.deltaMover.computeAttackedSquares(sq, diagonalDeltas, 0, g)
@@ -120,7 +120,7 @@ type Knight struct {
 }
 
 func (k Knight) WithLocalMove(move Move, g *Game) (*Game, error) {
-	return k.deltaMover.simulateMove(move.From, move.To, knightDeltas, 1, g)
+	return k.deltaMover.gameWithMove(move.From, move.To, knightDeltas, 1, g)
 }
 func (k Knight) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return k.deltaMover.computeAttackedSquares(sq, knightDeltas, 1, g)
