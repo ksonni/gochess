@@ -6,7 +6,7 @@ func TestAttackedSquaresBySide(t *testing.T) {
 	title := "Attacked squares"
 	g := playGame(title, []testMove{{"e2", "e4"}}, false, t)
 	attacked := g.ComputeSquaresAttackedBySide(PieceColor_White)
-	assertAttackedSquaresEqual(title, attacked, []string{
+	assertSquareMapEquals(title, attacked, []string{
 		"a3", "a6", "b3", "b5", "c3", "c4", "d3", "d5",
 		"e2", "e3", "f3", "f5", "g3", "g4", "h3", "h5",
 	}, t)
@@ -43,7 +43,10 @@ func (m testMove) Move() Move {
 }
 
 func playGame(title string, moves []testMove, jump bool, t *testing.T) *Game {
-	g := NewGame()
+	return continueGame(title, moves, jump, NewGame(), t)
+}
+
+func continueGame(title string, moves []testMove, jump bool, g *Game, t *testing.T) *Game {
 	for _, move := range moves {
 		if !jump {
 			if err := g.Move(move.Move()); err != nil {

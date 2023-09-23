@@ -9,8 +9,10 @@ type Piece interface {
 }
 
 type PieceMover interface {
-	// Attempts a move without considering if it might leave the king in check.
+	// WithLocalMove Attempts a move without considering if it might leave the king in check.
 	WithLocalMove(move Move, g *Game) (*Game, error)
+
+	PlanPossibleMovesLocally(from Square, g *Game) []MovePlan
 
 	ComputeAttackedSquares(sq Square, g *Game) map[Square]bool
 }
@@ -83,6 +85,9 @@ func (q Queen) String() string {
 func (q Queen) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return q.deltaMover.gameWithMove(move.From, move.To, royalDeltas, 0, g)
 }
+func (q Queen) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+	return q.deltaMover.planPossibleMoves(from, royalDeltas, 0, g)
+}
 func (q Queen) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return q.deltaMover.computeAttackedSquares(sq, royalDeltas, 0, g)
 }
@@ -98,6 +103,9 @@ func (r Rook) String() string {
 func (r Rook) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return r.deltaMover.gameWithMove(move.From, move.To, perpendicularDeltas, 0, g)
 }
+func (r Rook) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+	return r.deltaMover.planPossibleMoves(from, perpendicularDeltas, 0, g)
+}
 func (r Rook) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return r.deltaMover.computeAttackedSquares(sq, perpendicularDeltas, 0, g)
 }
@@ -110,6 +118,9 @@ type Bishop struct {
 func (b Bishop) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return b.deltaMover.gameWithMove(move.From, move.To, diagonalDeltas, 0, g)
 }
+func (b Bishop) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+	return b.deltaMover.planPossibleMoves(from, diagonalDeltas, 0, g)
+}
 func (b Bishop) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return b.deltaMover.computeAttackedSquares(sq, diagonalDeltas, 0, g)
 }
@@ -121,6 +132,9 @@ type Knight struct {
 
 func (k Knight) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return k.deltaMover.gameWithMove(move.From, move.To, knightDeltas, 1, g)
+}
+func (k Knight) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+	return k.deltaMover.planPossibleMoves(from, knightDeltas, 1, g)
 }
 func (k Knight) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return k.deltaMover.computeAttackedSquares(sq, knightDeltas, 1, g)

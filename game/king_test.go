@@ -4,100 +4,108 @@ import (
 	"testing"
 )
 
-func TestCastling(t *testing.T) {
-	successCastles := map[string]struct {
-		clearSquares []string
-		kingMove     testMove
-		rookMove     testMove
-		otherMoves   []testMove
-		mustFail     bool
-	}{
-		"White queenside castles": {
-			clearSquares: []string{"b1", "c1", "d1"},
-			kingMove:     testMove{"e1", "c1"},
-			rookMove:     testMove{"a1", "d1"},
-		},
-		"White kingside castles": {
-			clearSquares: []string{"f1", "g1"},
-			kingMove:     testMove{"e1", "g1"},
-			rookMove:     testMove{"h1", "f1"},
-		},
-		"Black queenside castles": {
-			clearSquares: []string{"b8", "c8", "d8"},
-			otherMoves:   []testMove{{"e2", "e4"}},
-			kingMove:     testMove{"e8", "c8"},
-			rookMove:     testMove{"a8", "d8"},
-		},
-		"Black kingside castles": {
-			clearSquares: []string{"f8", "g8"},
-			otherMoves:   []testMove{{"e2", "e4"}},
-			kingMove:     testMove{"e8", "g8"},
-			rookMove:     testMove{"h8", "f8"},
-		},
-		"Can't castle when path obstructed": {
-			clearSquares: []string{"f8"},
-			otherMoves:   []testMove{{"e2", "e4"}},
-			kingMove:     testMove{"e8", "g8"},
-			rookMove:     testMove{"h8", "f8"},
-			mustFail:     true,
-		},
-		"Can't castle while in check": {
-			clearSquares: []string{"f8", "g8", "e2", "d7"},
-			otherMoves: []testMove{
-				{"f1", "b5"}, // Give a check
-			},
-			kingMove: testMove{"e8", "g8"},
-			rookMove: testMove{"h8", "f8"},
-			mustFail: true,
-		},
-		"Can't castle when path attacked": {
-			clearSquares: []string{"f8", "g8", "e2", "f7"},
-			otherMoves: []testMove{
-				{"f1", "c4"}, // Attack castling square
-			},
-			kingMove: testMove{"e8", "g8"},
-			rookMove: testMove{"h8", "f8"},
-			mustFail: true,
-		},
-		"Can't castle if king moved previously": {
-			clearSquares: []string{"f8", "g8", "d7"},
-			otherMoves: []testMove{
-				{"a2", "a3"},
-				{"e8", "d7"}, // King moved
-				{"a3", "a4"},
-				{"d7", "e8"}, // King moves back
-				{"a4", "a5"},
-			},
-			kingMove: testMove{"e8", "g8"},
-			rookMove: testMove{"h8", "f8"},
-			mustFail: true,
-		},
-		"Can't castle if rook moved previously": {
-			clearSquares: []string{"f8", "g8", "e2", "h7"},
-			otherMoves: []testMove{
-				{"a2", "a3"},
-				{"h8", "h7"}, // rook moved
-				{"a3", "a4"},
-				{"a7", "a6"},
-				{"a4", "a5"},
-				{"h7", "h8"}, // rook moves back
-				{"b2", "b3"},
-			},
-			kingMove: testMove{"e8", "g8"},
-			rookMove: testMove{"h8", "f8"},
-			mustFail: true,
-		},
-	}
+type castleData struct {
+	clearSquares      []string
+	kingMove          testMove
+	rookMove          testMove
+	otherMoves        []testMove
+	possibleKingMoves []string
+	castleFails       bool
+}
 
-	for title, config := range successCastles {
+var castles = map[string]castleData{
+	"White queenside castles": {
+		clearSquares:      []string{"b1", "c1", "d1"},
+		kingMove:          testMove{"e1", "c1"},
+		rookMove:          testMove{"a1", "d1"},
+		possibleKingMoves: []string{"c1", "d1"},
+	},
+	"White kingside castles": {
+		clearSquares:      []string{"f1", "g1"},
+		kingMove:          testMove{"e1", "g1"},
+		rookMove:          testMove{"h1", "f1"},
+		possibleKingMoves: []string{"f1", "g1"},
+	},
+	"Black queenside castles": {
+		clearSquares:      []string{"b8", "c8", "d8"},
+		otherMoves:        []testMove{{"e2", "e4"}},
+		kingMove:          testMove{"e8", "c8"},
+		rookMove:          testMove{"a8", "d8"},
+		possibleKingMoves: []string{"d8", "c8"},
+	},
+	"Black kingside castles": {
+		clearSquares:      []string{"f8", "g8"},
+		otherMoves:        []testMove{{"e2", "e4"}},
+		kingMove:          testMove{"e8", "g8"},
+		rookMove:          testMove{"h8", "f8"},
+		possibleKingMoves: []string{"f8", "g8"},
+	},
+	"Can't castle when path obstructed": {
+		clearSquares:      []string{"f8"},
+		otherMoves:        []testMove{{"e2", "e4"}},
+		kingMove:          testMove{"e8", "g8"},
+		rookMove:          testMove{"h8", "f8"},
+		possibleKingMoves: []string{"f8"},
+		castleFails:       true,
+	},
+	"Can't castle while in check": {
+		clearSquares: []string{"f8", "g8", "e2", "d7"},
+		otherMoves: []testMove{
+			{"f1", "b5"}, // Give a check
+		},
+		kingMove:          testMove{"e8", "g8"},
+		rookMove:          testMove{"h8", "f8"},
+		possibleKingMoves: []string{"f8"},
+		castleFails:       true,
+	},
+	"Can't castle when path attacked": {
+		clearSquares: []string{"f8", "g8", "e2", "f7"},
+		otherMoves: []testMove{
+			{"f1", "c4"}, // Attack castling square
+		},
+		kingMove:          testMove{"e8", "g8"},
+		rookMove:          testMove{"h8", "f8"},
+		possibleKingMoves: []string{"f8"},
+		castleFails:       true,
+	},
+	"Can't castle if king moved previously": {
+		clearSquares: []string{"f8", "g8", "d7"},
+		otherMoves: []testMove{
+			{"a2", "a3"},
+			{"e8", "d7"}, // King moved
+			{"a3", "a4"},
+			{"d7", "e8"}, // King moves back
+			{"a4", "a5"},
+		},
+		kingMove:          testMove{"e8", "g8"},
+		rookMove:          testMove{"h8", "f8"},
+		possibleKingMoves: []string{"d7", "f8"},
+		castleFails:       true,
+	},
+	"Can't castle if rook moved previously": {
+		clearSquares: []string{"f8", "g8", "e2", "h7"},
+		otherMoves: []testMove{
+			{"a2", "a3"},
+			{"h8", "h7"}, // rook moved
+			{"a3", "a4"},
+			{"a7", "a6"},
+			{"a4", "a5"},
+			{"h7", "h8"}, // rook moves back
+			{"b2", "b3"},
+		},
+		kingMove:          testMove{"e8", "g8"},
+		rookMove:          testMove{"h8", "f8"},
+		possibleKingMoves: []string{"f8"},
+		castleFails:       true,
+	},
+}
+
+func TestCastling(t *testing.T) {
+	for title, config := range castles {
 		g := NewGame()
 		clearSquares(g, config.clearSquares...)
-		for i, move := range config.otherMoves {
-			if err := g.Move(move.Move()); err != nil {
-				t.Errorf("%s: move %d failed - %s to %s: %v", title, i+1, move.from, move.to, err)
-			}
-		}
-		kingMove, rookMove, mustFail := config.kingMove, config.rookMove, config.mustFail
+		continueGame(title, config.otherMoves, false, g, t)
+		kingMove, rookMove, mustFail := config.kingMove, config.rookMove, config.castleFails
 		err := g.Move(kingMove.Move())
 		if mustFail {
 			if err == nil {
@@ -126,5 +134,19 @@ func TestCastling(t *testing.T) {
 		if _, exists := board.GetPiece(sq(rookMove.from)); exists {
 			t.Errorf("%s: rook square %s must be cleared after castle", title, rookMove.from)
 		}
+	}
+}
+
+func TestPossibleCastleMoves(t *testing.T) {
+	for title, config := range castles {
+		g := NewGame()
+		clearSquares(g, config.clearSquares...)
+		continueGame(title, config.otherMoves, false, g, t)
+		moves := g.PlanPossibleMoves(sq(config.kingMove.from))
+		squares := make(map[Square]bool)
+		for _, move := range moves {
+			squares[move.To] = true
+		}
+		assertSquareMapEquals(title, squares, config.possibleKingMoves, t)
 	}
 }

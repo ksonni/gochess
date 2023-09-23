@@ -67,6 +67,11 @@ func (p Pawn) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return g.appendingPosition(board), nil
 }
 
+// TODO: implement
+func (p Pawn) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+	panic("TODO: implement")
+}
+
 // Helpers
 
 type pawnMovement struct {
