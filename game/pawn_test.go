@@ -2,7 +2,7 @@ package game
 
 import "testing"
 
-var empassantSetupMoves = func() []testMove {
+var enPassantSetupMoves = func() []testMove {
 	return []testMove{
 		{"a2", "a3"}, {"d7", "d5"},
 		{"a3", "a4"}, {"d5", "d4"},
@@ -10,7 +10,7 @@ var empassantSetupMoves = func() []testMove {
 	}
 }
 
-var empassantSetupMovesBlack = func() []testMove {
+var enPassantSetupMovesBlack = func() []testMove {
 	return []testMove{
 		{"e2", "e4"}, {"a7", "a6"},
 		{"e4", "e5"}, {"d7", "d5"},
@@ -32,13 +32,13 @@ func TestPawnAttackedSquares(t *testing.T) {
 			false,
 		},
 		"Pawn en-passant": {
-			empassantSetupMoves(),
+			enPassantSetupMoves(),
 			"d4",
 			[]string{"c3", "e3", "e4"},
 			false,
 		},
 		"Pawn en-passant right lost if not used immediately": {
-			append(empassantSetupMoves(), testMove{"h7", "h6"}),
+			append(enPassantSetupMoves(), testMove{"h7", "h6"}),
 			"d4",
 			[]string{"c3", "e3"},
 			false,
@@ -48,112 +48,135 @@ func TestPawnAttackedSquares(t *testing.T) {
 
 func TestEnPassant(t *testing.T) {
 	var tests = map[string]struct {
-		setupMoves    []testMove
-		move          testMove
-		captureSquare string
-		mustFail      bool
+		setupMoves     []testMove
+		move           testMove
+		captureSquare  string
+		possibleMoves  []string
+		enPassantFails bool
 	}{
 		"White en-passant": {
-			setupMoves:    empassantSetupMoves(),
+			setupMoves:    enPassantSetupMoves(),
 			move:          testMove{"d4", "e3"},
+			possibleMoves: []string{"d3", "e3"},
 			captureSquare: "e4",
 		},
 		"Black en-passant": {
-			setupMoves:    empassantSetupMovesBlack(),
+			setupMoves:    enPassantSetupMovesBlack(),
 			move:          testMove{"e5", "d6"},
+			possibleMoves: []string{"d6", "e6"},
 			captureSquare: "d4",
 		},
 		"White en-passant when rights lost": {
 			setupMoves: append(
-				empassantSetupMoves(),
+				enPassantSetupMoves(),
 				testMove{"h7", "h6"},
 				testMove{"h2", "h3"},
 			),
-			move:     testMove{"d4", "e3"},
-			mustFail: true,
+			move:           testMove{"d4", "e3"},
+			possibleMoves:  []string{"d3"},
+			enPassantFails: true,
 		},
 		"Black en-passant when rights lost": {
 			setupMoves: append(
-				empassantSetupMovesBlack(),
+				enPassantSetupMovesBlack(),
 				testMove{"h2", "h3"},
 				testMove{"h7", "h6"},
 			),
-			move:     testMove{"e5", "d6"},
-			mustFail: true,
+			move:           testMove{"e5", "d6"},
+			possibleMoves:  []string{"e6"},
+			enPassantFails: true,
 		},
 	}
 	for title, test := range tests {
-		testEnPassant(title, test.setupMoves, test.move, test.captureSquare, test.mustFail, t)
+		testEnPassant(title, test.setupMoves, test.move,
+			test.captureSquare, test.enPassantFails, test.possibleMoves, t)
 	}
 }
 
 func TestPromotion(t *testing.T) {
 	var tests = map[string]struct {
-		pawnSquare string
-		move       testMove
-		setupMoves []testMove
-		promoted   Piece
-		mustFail   bool
+		pawnSquare    string
+		move          testMove
+		setupMoves    []testMove
+		promoted      Piece
+		possibleMoves []string
+		cantPromote   bool
 	}{
 		"Can promote to knight": {
-			pawnSquare: "a2",
-			move:       testMove{"a7", "a8"},
-			promoted:   Knight{PieceProps: NewPieceProps(PieceColor_White)},
+			pawnSquare:    "a2",
+			move:          testMove{"a7", "a8"},
+			possibleMoves: []string{"a8", "b8"},
+			promoted:      Knight{PieceProps: NewPieceProps(PieceColor_White)},
 		},
 		"Can promote to bishop": {
-			pawnSquare: "a2",
-			move:       testMove{"a7", "a8"},
-			promoted:   Bishop{PieceProps: NewPieceProps(PieceColor_White)},
+			pawnSquare:    "a2",
+			move:          testMove{"a7", "a8"},
+			possibleMoves: []string{"a8", "b8"},
+			promoted:      Bishop{PieceProps: NewPieceProps(PieceColor_White)},
 		},
 		"Can promote to rook": {
-			pawnSquare: "a2",
-			move:       testMove{"a7", "a8"},
-			promoted:   Rook{PieceProps: NewPieceProps(PieceColor_White)},
+			pawnSquare:    "a2",
+			move:          testMove{"a7", "a8"},
+			possibleMoves: []string{"a8", "b8"},
+			promoted:      Rook{PieceProps: NewPieceProps(PieceColor_White)},
 		},
 		"Can promote to queen": {
-			pawnSquare: "a2",
-			move:       testMove{"a7", "a8"},
-			promoted:   Rook{PieceProps: NewPieceProps(PieceColor_White)},
+			pawnSquare:    "a2",
+			move:          testMove{"a7", "a8"},
+			possibleMoves: []string{"a8", "b8"},
+			promoted:      Rook{PieceProps: NewPieceProps(PieceColor_White)},
 		},
 		"Can't promote to king": {
-			pawnSquare: "a2",
-			move:       testMove{"a7", "a8"},
-			promoted:   King{PieceProps: NewPieceProps(PieceColor_White)},
-			mustFail:   true,
+			pawnSquare:    "a2",
+			move:          testMove{"a7", "a8"},
+			possibleMoves: []string{"a8", "b8"},
+			promoted:      King{PieceProps: NewPieceProps(PieceColor_White)},
+			cantPromote:   true,
 		},
 		"Can't promote to another pawn": {
-			pawnSquare: "a2",
-			move:       testMove{"a7", "a8"},
-			promoted:   Pawn{PieceProps: NewPieceProps(PieceColor_White)},
-			mustFail:   true,
+			pawnSquare:    "a2",
+			move:          testMove{"a7", "a8"},
+			possibleMoves: []string{"a8", "b8"},
+			promoted:      Pawn{PieceProps: NewPieceProps(PieceColor_White)},
+			cantPromote:   true,
 		},
 		"Can't promote to piece of a different color": {
-			pawnSquare: "a2",
-			move:       testMove{"a7", "a8"},
-			promoted:   Pawn{PieceProps: NewPieceProps(PieceColor_Black)},
-			mustFail:   true,
+			pawnSquare:    "a2",
+			move:          testMove{"a7", "a8"},
+			possibleMoves: []string{"a8", "b8"},
+			promoted:      Pawn{PieceProps: NewPieceProps(PieceColor_Black)},
+			cantPromote:   true,
 		},
 		"Can promote a black piece": {
-			pawnSquare: "a7",
-			move:       testMove{"a2", "a1"},
-			setupMoves: []testMove{{"e2", "e4"}},
-			promoted:   Queen{PieceProps: NewPieceProps(PieceColor_White)},
-			mustFail:   true,
+			pawnSquare:    "a7",
+			move:          testMove{"a2", "a1"},
+			setupMoves:    []testMove{{"e2", "e4"}},
+			promoted:      Queen{PieceProps: NewPieceProps(PieceColor_White)},
+			possibleMoves: []string{"a1", "b1"},
+			cantPromote:   true,
+		},
+		"Promotion from the middle of the board": {
+			pawnSquare:    "e2",
+			move:          testMove{"e7", "e8"},
+			possibleMoves: []string{"e8", "d8", "f8"},
+			promoted:      Rook{PieceProps: NewPieceProps(PieceColor_White)},
 		},
 	}
 	for title, test := range tests {
-		testPromotion(title, test.pawnSquare, test.move, test.setupMoves, test.promoted, test.mustFail, t)
+		testPromotion(title, test.pawnSquare, test.move, test.setupMoves,
+			test.promoted, test.cantPromote, test.possibleMoves, t)
 	}
 }
 
 // Helpers
 
 func testEnPassant(title string, setupMoves []testMove, enPassant testMove,
-	capturedSq string, mustFail bool, t *testing.T) {
+	capturedSq string, mustFail bool, possibleMoves []string, t *testing.T) {
 	g := playGame(title, setupMoves, false, t)
 	move := enPassant.Move()
 	piece, _ := g.Board().GetPiece(move.From)
-
+	moves := g.PlanPossibleMoves(move.From)
+	assertMovePlanSquares(title+": possible moves: ", moves, possibleMoves, t)
 	if err := g.Move(move); err != nil {
 		if !mustFail {
 			t.Errorf("%s: valid empassant move from %v to %v failed: %v",
@@ -173,7 +196,7 @@ func testEnPassant(title string, setupMoves []testMove, enPassant testMove,
 }
 
 func testPromotion(title string, pawnSquare string, promotionMove testMove,
-	setupMoves []testMove, promoted Piece, mustFail bool, t *testing.T) {
+	setupMoves []testMove, promoted Piece, mustFail bool, possibleMoves []string, t *testing.T) {
 	g := playGame(title, setupMoves, false, t)
 	clearSquares(g, promotionMove.from, promotionMove.to)
 	g.Board().jumpPiece(sq(pawnSquare), sq(promotionMove.from))
@@ -182,6 +205,11 @@ func testPromotion(title string, pawnSquare string, promotionMove testMove,
 		To:        sq(promotionMove.to),
 		Promotion: promoted,
 	}
+	moves := g.PlanPossibleMoves(move.From)
+	if lGot, lWant := len(moves), len(possibleMoves)*4; lGot != lWant {
+		t.Errorf("%s: promotion got %d possible positions, want %d", title, lGot, lWant)
+	}
+	assertMovePlanSquares(title, moves, possibleMoves, t)
 	if err := g.Move(move); err != nil {
 		if !mustFail {
 			t.Errorf("%s: promotion failed: %v", title, err)

@@ -1,24 +1,39 @@
 package game
 
 import (
+	"github.com/samber/lo"
+	"golang.org/x/exp/slices"
 	"reflect"
 	"testing"
-
-	"golang.org/x/exp/slices"
 )
 
 // Helpers
+
+func assertMovePlanSquares(title string, got []MovePlan, want []string, t *testing.T) {
+	var out []string
+	for _, move := range got {
+		out = append(out, move.To.String())
+	}
+	assertSquaresEqual(title, out, want, t)
+}
 
 func assertSquareMapEquals(title string, got map[Square]bool, want []string, t *testing.T) {
 	var out []string
 	for sq := range got {
 		out = append(out, sq.String())
 	}
-	slices.Sort(out)
+	assertSquaresEqual(title, out, want, t)
+}
+
+func assertSquaresEqual(title string, got []string, want []string, t *testing.T) {
+	got = lo.Uniq(got)
+	slices.Sort(got)
+
+	want = lo.Uniq(want)
 	slices.Sort(want)
 
-	if !reflect.DeepEqual(out, want) {
-		t.Errorf("%s: square maps: %v, want %v", title, out, want)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("%s: square maps: %v, want %v", title, got, want)
 	}
 }
 
