@@ -9,7 +9,7 @@ import (
 
 // Helpers
 
-func assertAttackedSquaresEqual(title string, got map[Square]bool, want []string, t *testing.T) {
+func assertSquareMapEquals(title string, got map[Square]bool, want []string, t *testing.T) {
 	var out []string
 	for sq := range got {
 		out = append(out, sq.String())
@@ -18,7 +18,7 @@ func assertAttackedSquaresEqual(title string, got map[Square]bool, want []string
 	slices.Sort(want)
 
 	if !reflect.DeepEqual(out, want) {
-		t.Errorf("%s: attacked squares: %v, want %v", title, out, want)
+		t.Errorf("%s: square maps: %v, want %v", title, out, want)
 	}
 }
 

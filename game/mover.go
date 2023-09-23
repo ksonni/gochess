@@ -53,6 +53,20 @@ func (mover deltaMover) planMove(from Square, to Square, deltas []Square,
 	return b, nil
 }
 
+func (mover deltaMover) planPossibleMoves(from Square, deltas []Square, maxSteps int, game *Game) []MovePlan {
+	attacked := mover.computeAttackedSquares(from, deltas, maxSteps, game)
+	moves := []MovePlan{}
+	for to := range attacked {
+		b := game.Board().Clone()
+		b.jumpPiece(from, to)
+		moves = append(moves, MovePlan{
+			Move: Move{From: from, To: to},
+			Game: game.appendingPosition(b),
+		})
+	}
+	return moves
+}
+
 func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, game *Game) map[Square]bool {
 	attacked := make(map[Square]bool)
 	for _, delta := range deltas {

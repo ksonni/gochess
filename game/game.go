@@ -14,6 +14,11 @@ type Move struct {
 	Promotion Piece
 }
 
+type MovePlan struct {
+	Move
+	Game *Game
+}
+
 func (g *Game) Board() *Board {
 	return g.position.board
 }
@@ -58,6 +63,34 @@ func (g *Game) ComputeAttackedSquares(from Square) map[Square]bool {
 		return make(map[Square]bool)
 	}
 	return piece.ComputeAttackedSquares(from, g)
+}
+
+func (g *Game) PlanPossibleMovesForSide(color PieceColor) []MovePlan {
+	out := []MovePlan{}
+	for sq, piece := range g.Board().pieces {
+		if piece.Color() != color {
+			continue
+		}
+		out = append(out, g.PlanPossibleMoves(sq)...)
+	}
+	return out
+}
+
+func (g *Game) PlanPossibleMoves(from Square) []MovePlan {
+	piece, exists := g.Board().GetPiece(from)
+	if !exists {
+		return []MovePlan{}
+	}
+	moves := piece.PlanPossibleMovesLocally(from, g)
+	out := []MovePlan{}
+	color := piece.Color()
+	for _, move := range moves {
+		if move.Game.IsSideInCheck(color) {
+			continue
+		}
+		out = append(out, move)
+	}
+	return out
 }
 
 func (g *Game) IsSideInCheck(color PieceColor) bool {

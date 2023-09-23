@@ -29,46 +29,67 @@ func (k King) WithLocalMove(move Move, g *Game) (*Game, error) {
 	}
 
 	// Attempt castling
-	board := g.Board().Clone()
-	position := g.Position()
-	attackMap := g.ComputeSquaresAttackedBySide(k.Color().Opponent())
-
-	// King must not be in check
-	if attackMap[from] {
-		return nil, fmt.Errorf("king: castling not possible when in check")
+	if moves := k.planPossibleCastlingMoves(from, &to, g); len(moves) > 0 {
+		return moves[0].Game, nil
 	}
-
-	// Castling - king must never have moved
-	if position.SquareHasEverChanged(from) {
-		return nil, fmt.Errorf("king: castling not possible, king has moved in the past")
-	}
-
-	for _, config := range k.castleConfigs(board) {
-		kingTargetSquare := from.Adding(config.kingDelta)
-		if kingTargetSquare != to {
-			continue
-		}
-		rookSquare := Square{File: config.rookStartFile, Rank: from.Rank}
-		// Rook must never have moved
-		if position.SquareHasEverChanged(rookSquare) {
-			return nil, fmt.Errorf("king: castling not possible, rook has moved in the past")
-		}
-		// Path must not be under attack
-		if !k.castlePathSafe(from, kingTargetSquare, attackMap, board) {
-			return nil, fmt.Errorf("king: castling not possible, path is attacked/obstructed")
-		}
-		board.jumpPiece(from, kingTargetSquare)
-		board.jumpPiece(rookSquare, rookSquare.Adding(config.rookDelta))
-		return g.appendingPosition(board), nil
-	}
-	return nil, fmt.Errorf("king: not a valid castling move")
+	return nil, fmt.Errorf("king: not a valid move")
 }
 
 func (k King) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return k.deltaMover.computeAttackedSquares(sq, royalDeltas, 1, g)
 }
 
+func (k King) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+	moves := k.deltaMover.planPossibleMoves(from, royalDeltas, 1, g)
+	moves = append(moves, k.planPossibleCastlingMoves(from, nil, g)...)
+	return moves
+}
+
 // Helpers
+
+func (k King) planPossibleCastlingMoves(from Square, to *Square, g *Game) []MovePlan {
+	moves := []MovePlan{}
+
+	// Computed attack map
+	attackMap := g.ComputeSquaresAttackedBySide(k.Color().Opponent())
+
+	position := g.Position()
+
+	// King must not be in check
+	if attackMap[from] {
+		return moves
+	}
+	// Castling - king must never have moved
+	if position.SquareHasEverChanged(from) {
+		return moves
+	}
+
+	board := g.Board()
+	for _, config := range k.castleConfigs(board) {
+		kingTargetSquare := from.Adding(config.kingDelta)
+		if to != nil && kingTargetSquare != *to {
+			continue
+		}
+		rookSquare := Square{File: config.rookStartFile, Rank: from.Rank}
+		// Rook must never have moved
+		if position.SquareHasEverChanged(rookSquare) {
+			continue
+		}
+		// Path must not be under attack
+		if !k.castlePathSafe(from, kingTargetSquare, attackMap, board) {
+			continue
+		}
+		out := board.Clone()
+		out.jumpPiece(from, kingTargetSquare)
+		out.jumpPiece(rookSquare, rookSquare.Adding(config.rookDelta))
+		moves = append(moves, MovePlan{
+			Move: Move{From: from, To: kingTargetSquare},
+			Game: g.appendingPosition(out),
+		})
+	}
+
+	return moves
+}
 
 func (k King) castleConfigs(board *Board) []castleConfig {
 	return []castleConfig{
