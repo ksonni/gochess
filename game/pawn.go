@@ -54,9 +54,24 @@ func (p Pawn) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return p.planPawnMovement(move, movement, g)
 }
 
-// TODO: implement
 func (p Pawn) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
-	panic("TODO: implement")
+	var plans []MovePlan
+	for to, movement := range p.computePawnMovements(from, g) {
+		var moves []Move
+		if movement.mustPromote {
+			for _, piece := range p.promotablePieces() {
+				moves = append(moves, Move{From: from, To: to, Promotion: piece})
+			}
+		} else {
+			moves = append(moves, Move{From: from, To: to})
+		}
+		for _, move := range moves {
+			if res, err := p.planPawnMovement(move, movement, g); err == nil {
+				plans = append(plans, MovePlan{Move: move, Game: res})
+			}
+		}
+	}
+	return plans
 }
 
 // Helpers
@@ -118,7 +133,7 @@ func (p Pawn) computeNonAttackedMovableSquares(from Square, g *Game) map[Square]
 func (p Pawn) computeNonAttackedMovements(from Square, g *Game) map[Square]*pawnMovement {
 	out := make(map[Square]*pawnMovement)
 	nonAttacked := p.computeNonAttackedMovableSquares(from, g)
-	for to, _ := range nonAttacked {
+	for to := range nonAttacked {
 		out[to] = &pawnMovement{mustPromote: p.promotionRank(g) == to.Rank}
 	}
 	return out
@@ -155,7 +170,7 @@ func (p Pawn) computeNormalAttackedSquares(from Square, g *Game) map[Square]bool
 func (p Pawn) computeNormalAttackedMovements(from Square, g *Game) map[Square]*pawnMovement {
 	out := make(map[Square]*pawnMovement)
 	attacked := p.computeNormalAttackedSquares(from, g)
-	for to, _ := range attacked {
+	for to := range attacked {
 		if _, exists := g.Board().GetPiece(to); exists {
 			out[to] = &pawnMovement{mustPromote: p.promotionRank(g) == to.Rank}
 		}
@@ -205,7 +220,7 @@ func (p Pawn) computeEnPassantAttackedSquares(from Square, g *Game) map[Square]b
 func (p Pawn) computeEnPassantAttackedMovements(from Square, g *Game) map[Square]*pawnMovement {
 	out := make(map[Square]*pawnMovement)
 	attacked := p.computeEnPassantAttackedSquares(from, g)
-	for attackSq, _ := range attacked {
+	for attackSq := range attacked {
 		to := attackSq.Adding(pawnDelta[p.Color()])
 		movement := &pawnMovement{mustPromote: p.promotionRank(g) == to.Rank}
 		if attacked[attackSq] {
@@ -247,5 +262,14 @@ func (p Pawn) canPromoteTo(target Piece) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+func (p Pawn) promotablePieces() []Piece {
+	return []Piece{
+		Queen{PieceProps: NewPieceProps(p.Color())},
+		Rook{PieceProps: NewPieceProps(p.Color())},
+		Knight{PieceProps: NewPieceProps(p.Color())},
+		Bishop{PieceProps: NewPieceProps(p.Color())},
 	}
 }
