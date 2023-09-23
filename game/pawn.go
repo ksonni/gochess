@@ -25,7 +25,7 @@ func init() {
 	setPawnDeltas(PieceColor_Black, Square{File: 1, Rank: -1})
 }
 
-// Conforms to promotablePiece, Piece
+// Pawn Conforms to promotablePiece, Piece
 type Pawn struct {
 	PieceProps
 }
@@ -46,12 +46,28 @@ func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
 }
 
 func (p Pawn) WithLocalMove(move Move, g *Game) (*Game, error) {
-	from, to, promotion := move.From, move.To, move.Promotion
-	movement, ok := p.computePawnMovement(from, to, g)
+	from, to := move.From, move.To
+	movement, ok := p.computePawnMovements(from, g)[to]
 	if !ok {
 		return nil, fmt.Errorf("pawn: illegal move")
 	}
+	return p.planPawnMovement(move, movement, g)
+}
 
+// TODO: implement
+func (p Pawn) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+	panic("TODO: implement")
+}
+
+// Helpers
+
+type pawnMovement struct {
+	secondaryCapture *Square
+	mustPromote      bool
+}
+
+func (p Pawn) planPawnMovement(move Move, movement *pawnMovement, g *Game) (*Game, error) {
+	from, to, promotion := move.From, move.To, move.Promotion
 	board := g.Board().Clone()
 	board.jumpPiece(from, to)
 
@@ -67,42 +83,23 @@ func (p Pawn) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return g.appendingPosition(board), nil
 }
 
-// TODO: implement
-func (p Pawn) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
-	panic("TODO: implement")
-}
-
-// Helpers
-
-type pawnMovement struct {
-	secondaryCapture *Square
-	mustPromote      bool
-}
-
-func (p Pawn) computePawnMovement(from Square, to Square, g *Game) (*pawnMovement, bool) {
-	defaultMovement := pawnMovement{mustPromote: p.promotionRank(g) == to.Rank}
-	var movement *pawnMovement
-	board := g.Board()
-
-	if nonAttacking := p.computeNonAttackingMovableSquares(from, g); nonAttacking[to] {
-		movement = &defaultMovement
-	} else if _, exists := board.GetPiece(to); exists {
-		if p.computeNormalAttackedSquares(from, g)[to] {
-			movement = &defaultMovement
-		}
-	} else {
-		attacked := p.computeEnPassantAttackedSquares(from, g)
-		target := to.Subtracting(pawnDelta[p.Color()])
-		if attacked[target] {
-			defaultMovement.secondaryCapture = &target
-			movement = &defaultMovement
-		}
+func (p Pawn) computePawnMovements(from Square, g *Game) map[Square]*pawnMovement {
+	out := make(map[Square]*pawnMovement)
+	for sq, movement := range p.computeNonAttackedMovements(from, g) {
+		out[sq] = movement
 	}
-
-	return movement, movement != nil
+	for sq, movement := range p.computeNormalAttackedMovements(from, g) {
+		out[sq] = movement
+	}
+	for sq, movement := range p.computeEnPassantAttackedMovements(from, g) {
+		out[sq] = movement
+	}
+	return out
 }
 
-func (p Pawn) computeNonAttackingMovableSquares(from Square, g *Game) map[Square]bool {
+// Non attacking movement
+
+func (p Pawn) computeNonAttackedMovableSquares(from Square, g *Game) map[Square]bool {
 	movable := make(map[Square]bool)
 	delta := pawnDelta[p.Color()]
 	board := g.Board()
@@ -117,6 +114,17 @@ func (p Pawn) computeNonAttackingMovableSquares(from Square, g *Game) map[Square
 	}
 	return movable
 }
+
+func (p Pawn) computeNonAttackedMovements(from Square, g *Game) map[Square]*pawnMovement {
+	out := make(map[Square]*pawnMovement)
+	nonAttacked := p.computeNonAttackedMovableSquares(from, g)
+	for to, _ := range nonAttacked {
+		out[to] = &pawnMovement{mustPromote: p.promotionRank(g) == to.Rank}
+	}
+	return out
+}
+
+// Normal attacking movement
 
 func (p Pawn) attacksNormal(from Square, to Square, g *Game) bool {
 	board := g.Board()
@@ -143,6 +151,19 @@ func (p Pawn) computeNormalAttackedSquares(from Square, g *Game) map[Square]bool
 	}
 	return attacked
 }
+
+func (p Pawn) computeNormalAttackedMovements(from Square, g *Game) map[Square]*pawnMovement {
+	out := make(map[Square]*pawnMovement)
+	attacked := p.computeNormalAttackedSquares(from, g)
+	for to, _ := range attacked {
+		if _, exists := g.Board().GetPiece(to); exists {
+			out[to] = &pawnMovement{mustPromote: p.promotionRank(g) == to.Rank}
+		}
+	}
+	return out
+}
+
+// En-Passant movement
 
 func (p Pawn) attacksEnPassant(from Square, to Square, g *Game) bool {
 	board := g.Board()
@@ -179,6 +200,20 @@ func (p Pawn) computeEnPassantAttackedSquares(from Square, g *Game) map[Square]b
 		}
 	}
 	return attacked
+}
+
+func (p Pawn) computeEnPassantAttackedMovements(from Square, g *Game) map[Square]*pawnMovement {
+	out := make(map[Square]*pawnMovement)
+	attacked := p.computeEnPassantAttackedSquares(from, g)
+	for attackSq, _ := range attacked {
+		to := attackSq.Adding(pawnDelta[p.Color()])
+		movement := &pawnMovement{mustPromote: p.promotionRank(g) == to.Rank}
+		if attacked[attackSq] {
+			movement.secondaryCapture = &attackSq
+		}
+		out[to] = movement
+	}
+	return out
 }
 
 func (p Pawn) homeRank(g *Game) int {
