@@ -6,5 +6,7 @@ import (
 )
 
 func main() {
-	fmt.Printf("Game initialized at move %d\n", game.NewGame().NumMoves())
+	g := game.NewGame()
+	moves := g.PlanPossibleMovesForSide(game.PieceColor_Black)
+	fmt.Printf("Game initialized. There are %d moves white can play\n", len(moves))
 }
