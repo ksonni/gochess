@@ -38,7 +38,7 @@ func (g *Game) WithMove(move Move) (*Game, error) {
 	if !exists {
 		return nil, fmt.Errorf("game: no piece exists at %s", move.From)
 	}
-	if !g.SideCanMove(piece.Color()) {
+	if g.MovingSide() != piece.Color() {
 		return nil, fmt.Errorf("game: attempted to move piece out of turn")
 	}
 
@@ -66,7 +66,7 @@ func (g *Game) ComputeAttackedSquares(from Square) map[Square]bool {
 }
 
 func (g *Game) PlanPossibleMovesForSide(color PieceColor) []MovePlan {
-	out := []MovePlan{}
+	var out []MovePlan
 	for sq, piece := range g.Board().pieces {
 		if piece.Color() != color {
 			continue
@@ -82,7 +82,7 @@ func (g *Game) PlanPossibleMoves(from Square) []MovePlan {
 		return []MovePlan{}
 	}
 	moves := piece.PlanPossibleMovesLocally(from, g)
-	out := []MovePlan{}
+	var out []MovePlan
 	color := piece.Color()
 	for _, move := range moves {
 		if move.Game.IsSideInCheck(color) {
@@ -102,8 +102,8 @@ func (g *Game) NumMoves() int {
 	return g.numMoves
 }
 
-func (g *Game) SideCanMove(color PieceColor) bool {
-	return g.NumMoves()%2 == int(color)
+func (g *Game) MovingSide() PieceColor {
+	return PieceColor(g.NumMoves() % 2)
 }
 
 func (g *Game) Position() *Position {
