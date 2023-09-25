@@ -44,6 +44,9 @@ func (k King) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
 	moves = append(moves, k.planPossibleCastlingMoves(from, nil, g)...)
 	return moves
 }
+func (k King) Type() PieceType {
+	return PieceType_King
+}
 
 // Helpers
 
