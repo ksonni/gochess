@@ -105,7 +105,7 @@ func (g *Game) PlanPossibleMoves(from Square) []MovePlan {
 
 func (g *Game) IsSideInCheck(color PieceColor) bool {
 	attackMap := g.ComputeSquaresAttackedBySide(color.Opponent())
-	return g.resultAnalyzer.isSideInCheck(color, attackMap, g.Board(), g)
+	return g.resultAnalyzer.isKingInCheck(color, attackMap, g)
 }
 
 func (g *Game) NumMoves() int {
