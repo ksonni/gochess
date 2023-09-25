@@ -5,7 +5,7 @@ import "fmt"
 type Game struct {
 	position *Position
 	numMoves int
-	boardAnalyzer
+	resultAnalyzer
 }
 
 type Move struct {
@@ -54,7 +54,17 @@ func (g *Game) WithMove(move Move) (*Game, error) {
 }
 
 func (g *Game) ComputeSquaresAttackedBySide(color PieceColor) map[Square]bool {
-	return g.boardAnalyzer.computeSquaresAttackedBySide(color, g)
+	attacked := make(map[Square]bool)
+	for square, piece := range g.Board().pieces {
+		if piece.Color() != color {
+			continue
+		}
+		pieceAttacked := piece.ComputeAttackedSquares(square, g)
+		for pieceSquare, val := range pieceAttacked {
+			attacked[pieceSquare] = val
+		}
+	}
+	return attacked
 }
 
 func (g *Game) ComputeAttackedSquares(from Square) map[Square]bool {
@@ -95,7 +105,7 @@ func (g *Game) PlanPossibleMoves(from Square) []MovePlan {
 
 func (g *Game) IsSideInCheck(color PieceColor) bool {
 	attackMap := g.ComputeSquaresAttackedBySide(color.Opponent())
-	return g.boardAnalyzer.isSideInCheck(color, attackMap, g.Board(), g)
+	return g.resultAnalyzer.isSideInCheck(color, attackMap, g.Board(), g)
 }
 
 func (g *Game) NumMoves() int {
