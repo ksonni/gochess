@@ -36,7 +36,9 @@ func (p Pawn) Color() PieceColor {
 func (p Pawn) String() string {
 	return "p"
 }
-
+func (p Pawn) Type() PieceType {
+	return PieceType_Pawn_
+}
 func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
 	attacked := p.computeNormalAttackedSquares(from, g)
 	for sq, val := range p.computeEnPassantAttackedSquares(from, g) {

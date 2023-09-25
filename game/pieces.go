@@ -6,6 +6,7 @@ type Piece interface {
 	PieceMover
 	Color() PieceColor
 	Id() PieceId
+	Type() PieceType
 }
 
 type PieceMover interface {
@@ -18,6 +19,17 @@ type PieceMover interface {
 }
 
 type PieceId int
+
+type PieceType int
+
+const (
+	PieceType_King PieceType = iota
+	PieceType_Queen
+	PieceType_Rook_
+	PieceType_Bishop_
+	PieceType_Knight
+	PieceType_Pawn_
+)
 
 type PieceProps struct {
 	PieceColor PieceColor
@@ -91,6 +103,9 @@ func (q Queen) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
 func (q Queen) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return q.deltaMover.computeAttackedSquares(sq, royalDeltas, 0, g)
 }
+func (q Queen) Type() PieceType {
+	return PieceType_Queen
+}
 
 type Rook struct {
 	deltaMover
@@ -109,6 +124,9 @@ func (r Rook) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
 func (r Rook) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return r.deltaMover.computeAttackedSquares(sq, perpendicularDeltas, 0, g)
 }
+func (r Rook) Type() PieceType {
+	return PieceType_Rook_
+}
 
 type Bishop struct {
 	deltaMover
@@ -124,6 +142,9 @@ func (b Bishop) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
 func (b Bishop) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return b.deltaMover.computeAttackedSquares(sq, diagonalDeltas, 0, g)
 }
+func (b Bishop) Type() PieceType {
+	return PieceType_Bishop_
+}
 
 type Knight struct {
 	deltaMover
@@ -138,4 +159,7 @@ func (k Knight) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
 }
 func (k Knight) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return k.deltaMover.computeAttackedSquares(sq, knightDeltas, 1, g)
+}
+func (k Knight) Type() PieceType {
+	return PieceType_Knight
 }
