@@ -65,3 +65,13 @@ func clearSquares(g *Game, squares ...string) {
 		g.Board().clearSquare(sq(s))
 	}
 }
+
+func createPosition(strPieces map[string]Piece) *Game {
+	g := NewGame()
+	pieces := make(map[Square]Piece)
+	for sqStr, piece := range strPieces {
+		pieces[sq(sqStr)] = piece
+	}
+	g.position.board.pieces = pieces
+	return g
+}

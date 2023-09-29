@@ -1,6 +1,8 @@
 package game
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 type Piece interface {
 	PieceMover
@@ -25,24 +27,24 @@ type PieceType int
 const (
 	PieceType_King PieceType = iota
 	PieceType_Queen
-	PieceType_Rook_
-	PieceType_Bishop_
+	PieceType_Rook
+	PieceType_Bishop
 	PieceType_Knight
-	PieceType_Pawn_
+	PieceType_Pawn
 )
 
-type PieceProps struct {
+type pieceProps struct {
 	PieceColor PieceColor
 	PieceId    PieceId
 }
 
-func NewPieceProps(color PieceColor) PieceProps {
-	return PieceProps{PieceColor: color, PieceId: PieceId(rand.Int())}
+func newPieceProps(color PieceColor) pieceProps {
+	return pieceProps{PieceColor: color, PieceId: PieceId(rand.Int())}
 }
-func (p PieceProps) Color() PieceColor {
+func (p pieceProps) Color() PieceColor {
 	return p.PieceColor
 }
-func (p PieceProps) Id() PieceId {
+func (p pieceProps) Id() PieceId {
 	return p.PieceId
 }
 
@@ -86,9 +88,13 @@ func init() {
 	royalDeltas = append(royalDeltas, diagonalDeltas...)
 }
 
+func NewQueen(color PieceColor) Queen {
+	return Queen{pieceProps: newPieceProps(color)}
+}
+
 type Queen struct {
 	deltaMover
-	PieceProps
+	pieceProps
 }
 
 func (q Queen) String() string {
@@ -107,9 +113,13 @@ func (q Queen) Type() PieceType {
 	return PieceType_Queen
 }
 
+func NewRook(color PieceColor) Rook {
+	return Rook{pieceProps: newPieceProps(color)}
+}
+
 type Rook struct {
 	deltaMover
-	PieceProps
+	pieceProps
 }
 
 func (r Rook) String() string {
@@ -125,12 +135,16 @@ func (r Rook) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return r.deltaMover.computeAttackedSquares(sq, perpendicularDeltas, 0, g)
 }
 func (r Rook) Type() PieceType {
-	return PieceType_Rook_
+	return PieceType_Rook
+}
+
+func NewBishop(color PieceColor) Bishop {
+	return Bishop{pieceProps: newPieceProps(color)}
 }
 
 type Bishop struct {
 	deltaMover
-	PieceProps
+	pieceProps
 }
 
 func (b Bishop) WithLocalMove(move Move, g *Game) (*Game, error) {
@@ -143,12 +157,16 @@ func (b Bishop) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 	return b.deltaMover.computeAttackedSquares(sq, diagonalDeltas, 0, g)
 }
 func (b Bishop) Type() PieceType {
-	return PieceType_Bishop_
+	return PieceType_Bishop
+}
+
+func NewKnight(color PieceColor) Knight {
+	return Knight{pieceProps: newPieceProps(color)}
 }
 
 type Knight struct {
 	deltaMover
-	PieceProps
+	pieceProps
 }
 
 func (k Knight) WithLocalMove(move Move, g *Game) (*Game, error) {

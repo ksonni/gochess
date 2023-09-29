@@ -6,7 +6,7 @@ import (
 )
 
 type King struct {
-	PieceProps
+	pieceProps
 	deltaMover deltaMover
 }
 
@@ -14,6 +14,10 @@ type castleConfig struct {
 	kingDelta     Square
 	rookDelta     Square
 	rookStartFile int
+}
+
+func NewKing(color PieceColor) King {
+	return King{pieceProps: newPieceProps(color)}
 }
 
 func (k King) String() string {
