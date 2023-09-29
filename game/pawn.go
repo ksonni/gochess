@@ -25,9 +25,13 @@ func init() {
 	setPawnDeltas(PieceColor_Black, Square{File: 1, Rank: -1})
 }
 
+func NewPawn(color PieceColor) Pawn {
+	return Pawn{pieceProps: newPieceProps(color)}
+}
+
 // Pawn Conforms to promotablePiece, Piece
 type Pawn struct {
-	PieceProps
+	pieceProps
 }
 
 func (p Pawn) Color() PieceColor {
@@ -37,7 +41,7 @@ func (p Pawn) String() string {
 	return "p"
 }
 func (p Pawn) Type() PieceType {
-	return PieceType_Pawn_
+	return PieceType_Pawn
 }
 func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
 	attacked := p.computeNormalAttackedSquares(from, g)
@@ -269,9 +273,9 @@ func (p Pawn) canPromoteTo(target Piece) bool {
 
 func (p Pawn) promotablePieces() []Piece {
 	return []Piece{
-		Queen{PieceProps: NewPieceProps(p.Color())},
-		Rook{PieceProps: NewPieceProps(p.Color())},
-		Knight{PieceProps: NewPieceProps(p.Color())},
-		Bishop{PieceProps: NewPieceProps(p.Color())},
+		NewQueen(p.Color()),
+		NewRook(p.Color()),
+		NewKnight(p.Color()),
+		NewBishop(p.Color()),
 	}
 }

@@ -25,14 +25,14 @@ func (i *gameMaker) initializePieces(board *Board) {
 
 func (i *gameMaker) populatePieces(board *Board, color PieceColor, rank int) {
 	pieces := []Piece{
-		Rook{PieceProps: NewPieceProps(color)},
-		Knight{PieceProps: NewPieceProps(color)},
-		Bishop{PieceProps: NewPieceProps(color)},
-		Queen{PieceProps: NewPieceProps(color)},
-		King{PieceProps: NewPieceProps(color)},
-		Bishop{PieceProps: NewPieceProps(color)},
-		Knight{PieceProps: NewPieceProps(color)},
-		Rook{PieceProps: NewPieceProps(color)},
+		NewRook(color),
+		NewKnight(color),
+		NewBishop(color),
+		NewQueen(color),
+		NewKing(color),
+		NewBishop(color),
+		NewKnight(color),
+		NewRook(color),
 	}
 	for file, piece := range pieces {
 		board.setPiece(piece, Square{File: file, Rank: rank})
@@ -42,7 +42,7 @@ func (i *gameMaker) populatePieces(board *Board, color PieceColor, rank int) {
 func (i *gameMaker) populatePawns(board *Board, color PieceColor, rank int) {
 	for file := 0; file < board.NumFiles(); file++ {
 		board.setPiece(
-			Pawn{PieceProps: NewPieceProps(color)},
+			NewPawn(color),
 			Square{File: file, Rank: rank},
 		)
 	}
