@@ -14,26 +14,26 @@ type castleData struct {
 }
 
 var castles = map[string]castleData{
-	"White queenside castles": {
+	"White queen-side castles": {
 		clearSquares:      []string{"b1", "c1", "d1"},
 		kingMove:          testMove{"e1", "c1"},
 		rookMove:          testMove{"a1", "d1"},
 		possibleKingMoves: []string{"c1", "d1"},
 	},
-	"White kingside castles": {
+	"White king-side castles": {
 		clearSquares:      []string{"f1", "g1"},
 		kingMove:          testMove{"e1", "g1"},
 		rookMove:          testMove{"h1", "f1"},
 		possibleKingMoves: []string{"f1", "g1"},
 	},
-	"Black queenside castles": {
+	"Black queen-side castles": {
 		clearSquares:      []string{"b8", "c8", "d8"},
 		otherMoves:        []testMove{{"e2", "e4"}},
 		kingMove:          testMove{"e8", "c8"},
 		rookMove:          testMove{"a8", "d8"},
 		possibleKingMoves: []string{"d8", "c8"},
 	},
-	"Black kingside castles": {
+	"Black king-side castles": {
 		clearSquares:      []string{"f8", "g8"},
 		otherMoves:        []testMove{{"e2", "e4"}},
 		kingMove:          testMove{"e8", "g8"},
