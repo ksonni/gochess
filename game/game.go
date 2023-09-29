@@ -121,6 +121,17 @@ func (g *Game) Position() *Position {
 	return &p
 }
 
+func (g *Game) CountPieces(side PieceColor) map[PieceType]int {
+	count := make(map[PieceType]int)
+	for _, piece := range g.Board().pieces {
+		if piece.Color() != side {
+			continue
+		}
+		count[piece.Type()] += 1
+	}
+	return count
+}
+
 // Helpers
 
 func (g *Game) appendingPosition(board *Board) *Game {
