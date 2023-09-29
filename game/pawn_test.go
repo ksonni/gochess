@@ -18,7 +18,7 @@ var enPassantSetupMovesBlack = func() []testMove {
 }
 
 func TestPawnAttackedSquares(t *testing.T) {
-	runAttackedSquaresTests(map[string]targettedSquaresTestInput{
+	runAttackedSquaresTests(map[string]targetedSquaresTestInput{
 		"Pawn left flank": {
 			[]testMove{},
 			"a2",

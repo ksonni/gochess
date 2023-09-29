@@ -5,7 +5,7 @@ import (
 )
 
 func TestPiecesAttackedSquares(t *testing.T) {
-	runAttackedSquaresTests(map[string]targettedSquaresTestInput{
+	runAttackedSquaresTests(map[string]targetedSquaresTestInput{
 		"Rook": {
 			[]testMove{{"a1", "e4"}},
 			"e4",
@@ -64,7 +64,7 @@ func TestPiecesAttackedSquares(t *testing.T) {
 }
 
 func TestPlanPossibleMoves(t *testing.T) {
-	runPossibleMovesTests(map[string]targettedSquaresTestInput{
+	runPossibleMovesTests(map[string]targetedSquaresTestInput{
 		"Rook": {
 			[]testMove{{"a1", "e4"}},
 			"e4",
@@ -124,26 +124,26 @@ func TestPlanPossibleMoves(t *testing.T) {
 
 // Helpers
 
-type targettedSquaresTestInput struct {
+type targetedSquaresTestInput struct {
 	moves      []testMove
 	testSquare string
-	targetted  []string
+	targeted   []string
 	jump       bool
 }
 
-type targettedSquaresTestFn = func(title string, g *Game,
+type targetedSquaresTestFn = func(title string, g *Game,
 	testSquare string, want []string, t *testing.T)
 
-func runTargettedSquaresTests(tests map[string]targettedSquaresTestInput,
-	testFn targettedSquaresTestFn, t *testing.T) {
+func runTargetedSquaresTests(tests map[string]targetedSquaresTestInput,
+	testFn targetedSquaresTestFn, t *testing.T) {
 	for title, test := range tests {
 		g := playGame(title, test.moves, test.jump, t)
-		testFn(title, g, test.testSquare, test.targetted, t)
+		testFn(title, g, test.testSquare, test.targeted, t)
 	}
 }
 
-func runAttackedSquaresTests(tests map[string]targettedSquaresTestInput, t *testing.T) {
-	runTargettedSquaresTests(tests, testAttackedSquares, t)
+func runAttackedSquaresTests(tests map[string]targetedSquaresTestInput, t *testing.T) {
+	runTargetedSquaresTests(tests, testAttackedSquares, t)
 }
 
 func testAttackedSquares(title string, g *Game, testSquare string, want []string, t *testing.T) {
@@ -151,8 +151,8 @@ func testAttackedSquares(title string, g *Game, testSquare string, want []string
 	assertSquareMapEquals(title, attackedResult, want, t)
 }
 
-func runPossibleMovesTests(tests map[string]targettedSquaresTestInput, t *testing.T) {
-	runTargettedSquaresTests(tests, testPossibleMoves, t)
+func runPossibleMovesTests(tests map[string]targetedSquaresTestInput, t *testing.T) {
+	runTargetedSquaresTests(tests, testPossibleMoves, t)
 }
 
 func testPossibleMoves(title string, g *Game, testSquare string, want []string, t *testing.T) {
