@@ -70,8 +70,33 @@ func (a *resultAnalyzer) testForDraw(g *Game, color PieceColor) (*DrawReason, bo
 	return &drawReason, true
 }
 
-// TODO/implement
 func (a *resultAnalyzer) hasInsufficientMaterial(g *Game, color PieceColor) bool {
+	counts := g.CountPieces()
+	black, white := counts[PieceColor_Black], counts[PieceColor_White]
+	nBlack, nWhite := len(black), len(white)
+	// Sanity check
+	if black[PieceType_King] != 1 || white[PieceType_King] != 1 {
+		return false
+	}
+	// King vs king
+	if nBlack == 1 && nWhite == 1 {
+		return true
+	}
+	// King vs King & (Knight/Bishop)
+	if nBlack+nWhite == 3 {
+		return black[PieceType_Knight] == 1 || black[PieceType_Bishop] == 1 ||
+			white[PieceType_Knight] == 1 || white[PieceType_Bishop] == 1
+	}
+	// King vs King with both sides having an opposite color bishop
+	if nBlack == 2 && nWhite == 2 {
+		var bishopSqs []Square
+		for square, piece := range g.Board().pieces {
+			if piece.Type() == PieceType_Bishop {
+				bishopSqs = append(bishopSqs, square)
+			}
+		}
+		return len(bishopSqs) == 2 && bishopSqs[0].Color() != bishopSqs[1].Color()
+	}
 	return false
 }
 

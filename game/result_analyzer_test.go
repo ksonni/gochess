@@ -6,6 +6,7 @@ import (
 
 func TestResults(t *testing.T) {
 	stalemate := DrawReason_Stalemate
+	insufficientMat := DrawReason_InusfficientMaterial
 
 	tests := map[string]struct {
 		pos    map[string]Piece
@@ -86,6 +87,65 @@ func TestResults(t *testing.T) {
 				"a7": NewPawn(PieceColor_White),
 				"a6": NewKing(PieceColor_White),
 				"d5": NewPawn(PieceColor_Black),
+			},
+			ResultData{Result: GameResult_Active},
+		},
+
+		// Insufficient material
+		"King vs King insufficient material": {
+			map[string]Piece{
+				"a8": NewKing(PieceColor_Black),
+				"a6": NewKing(PieceColor_White),
+			},
+			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+		},
+		"King vs King & white knight insufficient material": {
+			map[string]Piece{
+				"a8": NewKing(PieceColor_Black),
+				"a6": NewKing(PieceColor_White),
+				"a1": NewKnight(PieceColor_White),
+			},
+			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+		},
+		"King vs King & black knight insufficient material": {
+			map[string]Piece{
+				"a8": NewKing(PieceColor_Black),
+				"a6": NewKing(PieceColor_White),
+				"a1": NewKnight(PieceColor_Black),
+			},
+			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+		},
+		"King vs King & white bishop insufficient material": {
+			map[string]Piece{
+				"a8": NewKing(PieceColor_Black),
+				"a6": NewKing(PieceColor_White),
+				"a1": NewBishop(PieceColor_White),
+			},
+			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+		},
+		"King vs King & black bishop insufficient material": {
+			map[string]Piece{
+				"a8": NewKing(PieceColor_Black),
+				"a6": NewKing(PieceColor_White),
+				"a1": NewBishop(PieceColor_Black),
+			},
+			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+		},
+		"King vs King & opposing square colour bishops insufficient material": {
+			map[string]Piece{
+				"a8": NewKing(PieceColor_Black),
+				"a1": NewBishop(PieceColor_Black),
+				"a6": NewKing(PieceColor_White),
+				"b1": NewBishop(PieceColor_White),
+			},
+			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+		},
+		"King vs King & same square colour bishops, not insufficient material": {
+			map[string]Piece{
+				"a8": NewKing(PieceColor_Black),
+				"a1": NewBishop(PieceColor_Black),
+				"a6": NewKing(PieceColor_White),
+				"a3": NewBishop(PieceColor_White),
 			},
 			ResultData{Result: GameResult_Active},
 		},
