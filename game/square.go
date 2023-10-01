@@ -10,6 +10,13 @@ type Square struct {
 	Rank int
 }
 
+type SquareColor int
+
+const (
+	SquareColor_Black SquareColor = iota
+	SquareColor_White
+)
+
 func (square Square) String() string {
 	return fmt.Sprintf("%c%d", 'a'+square.File, square.Rank+1)
 }
@@ -48,4 +55,18 @@ func (square Square) Multiplying(delta Square) Square {
 		File: square.File * delta.File,
 		Rank: square.Rank * delta.Rank,
 	}
+}
+
+func (square Square) Color() SquareColor {
+	if square.isBlack() {
+		return SquareColor_Black
+	}
+	return SquareColor_White
+}
+
+func (square Square) isBlack() bool {
+	if square.Rank%2 == 0 {
+		return square.File%2 == 0
+	}
+	return square.File%2 == 1
 }

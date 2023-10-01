@@ -7,6 +7,26 @@ import (
 	"testing"
 )
 
+func TestSquareColor(t *testing.T) {
+	colors := map[string]SquareColor{
+		"a1": SquareColor_Black,
+		"a2": SquareColor_White,
+		"a3": SquareColor_Black,
+		"e4": SquareColor_White,
+		"e5": SquareColor_Black,
+		"e6": SquareColor_White,
+		"h8": SquareColor_Black,
+	}
+
+	for square, wantCol := range colors {
+		gotCol := sq(square).Color()
+		if gotCol != wantCol {
+			t.Errorf("SquareColor: color for %s got %v want %v",
+				square, gotCol, wantCol)
+		}
+	}
+}
+
 // Helpers
 
 func assertMovePlanSquares(title string, got []MovePlan, want []string, t *testing.T) {
