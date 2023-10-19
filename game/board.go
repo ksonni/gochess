@@ -84,3 +84,19 @@ func (board *Board) jumpPiece(start Square, end Square) {
 		board.setPiece(piece, end)
 	}
 }
+
+func (board *Board) String() string {
+	var str string
+	for rank := board.NumRanks() - 1; rank >= 0; rank-- {
+		for file := 0; file < board.NumFiles(); file++ {
+			square := Square{File: file, Rank: rank}
+			if piece, exists := board.GetPiece(square); exists {
+				str += piece.String()
+			} else {
+				str += "."
+			}
+		}
+		str += "\n"
+	}
+	return str
+}

@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -185,16 +186,15 @@ func TestResults(t *testing.T) {
 		},
 
 		// 3-fold repetition
-		// "3-fold repetition": {
-		// 	map[string]Piece{
-		// 		"a8": NewKing(PieceColor_White),
-		// 		"h1": NewKing(PieceColor_Black),
-		// 		"a7": NewRook(PieceColor_White),
-		// 		"h2": NewRook(PieceColor_Black),
-		// 	},
-		// 	ResultData{Result: GameResult_Active},
-		// 	// ResultData{Result: GameResult_Draw, DrawReason: &threeFold},
-		// },
+		"3-fold repetition": {
+			map[string]Piece{
+				"a8": NewKing(PieceColor_White),
+				"h1": NewKing(PieceColor_Black),
+				"a7": NewRook(PieceColor_White),
+			},
+			// ResultData{Result: GameResult_Draw, DrawReason: &threeFold},
+			ResultData{Result: GameResult_Active},
+		},
 	}
 
 	for title, pos := range tests {
@@ -290,7 +290,36 @@ func TestResults(t *testing.T) {
 				}
 			}
 		} else if strings.HasPrefix(title, "3-fold repetition") {
-			// TODO Make the moves
+			var err error
+			g = createPosition(pos.pos, false) // reset the board
+
+			for i := 0; i < 3; i++ {
+				// XXX The explicit error checking should really be made into exceptions
+				// there...
+				err = g.Move(Move{From: sq("a8"), To: sq("b8")})
+				if err != nil {
+					t.Errorf("%s: unexpected error: %v", title, err)
+					return
+				}
+				err = g.Move(Move{From: sq("h1"), To: sq("g1")})
+				if err != nil {
+					t.Errorf("%s: unexpected error: %v", title, err)
+					return
+				}
+				// ...and back
+				err = g.Move(Move{From: sq("b8"), To: sq("a8")})
+				if err != nil {
+					t.Errorf("%s: unexpected error: %v", title, err)
+					return
+				}
+				err = g.Move(Move{From: sq("g1"), To: sq("h1")})
+				if err != nil {
+					t.Errorf("%s: unexpected error: %v", title, err)
+					return
+				}
+			}
+
+			fmt.Printf("Game:\n\n%s\n", g)
 		}
 		result := g.computeResult(g)
 		if result.Result != pos.result.Result {

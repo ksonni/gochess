@@ -38,7 +38,11 @@ func (p Pawn) Color() PieceColor {
 	return p.PieceColor
 }
 func (p Pawn) String() string {
-	return "p"
+	if p.PieceColor == PieceColor_White {
+		return "P"
+	} else {
+		return "p"
+	}
 }
 func (p Pawn) Type() PieceType {
 	return PieceType_Pawn

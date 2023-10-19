@@ -134,7 +134,47 @@ func (g *Game) CountPieces() map[PieceColor]map[PieceType]int {
 	return out
 }
 
+func (g *Game) String() string {
+	s := ""
+	if g.position != nil && g.position.board != nil {
+		s += g.position.board.String()
+	}
+	s += fmt.Sprintln("move: ", g.MovingSide())
+	whiteCanCastle, blackCanCastle := g.castlingRights()
+	s += fmt.Sprintln("castling rights: White:", whiteCanCastle, "Black:", blackCanCastle)
+	enPassantSquare, canEnPassant := g.enPassantSquare()
+	if canEnPassant {
+		s += fmt.Sprintln("en-passant square:", enPassantSquare)
+	} else {
+		s += fmt.Sprintln("en-passant square: -")
+	}
+
+	return s
+}
+
 // Helpers
+
+func (g *Game) enPassantSquare() (Square, bool) {
+	// find all pawns in the game
+	for square, piece := range g.position.board.pieces {
+		if pawn, ok := piece.(Pawn); ok && pawn.Type() == PieceType_Pawn {
+			attackedSquares := pawn.computeEnPassantAttackedSquares(square, g)
+			for x := range attackedSquares {
+				if attackedSquares[x] {
+					return x, true
+				}
+			}
+
+		}
+	}
+	return Square{}, false
+}
+
+func (g *Game) castlingRights() (bool, bool) {
+	whiteCanCastle := !g.position.SquareHasEverChanged(Square{4, 0}) && (!g.position.SquareHasEverChanged(Square{0, 0}) || !g.position.SquareHasEverChanged(Square{7, 0}))
+	blackCanCastle := !g.position.SquareHasEverChanged(Square{4, 7}) && (!g.position.SquareHasEverChanged(Square{0, 7}) || !g.position.SquareHasEverChanged(Square{7, 7}))
+	return whiteCanCastle, blackCanCastle
+}
 
 func (g *Game) appendingPosition(board *Board) *Game {
 	return &Game{

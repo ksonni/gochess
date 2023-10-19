@@ -21,7 +21,11 @@ func NewKing(color PieceColor) King {
 }
 
 func (k King) String() string {
-	return "K"
+	if k.PieceColor == PieceColor_White {
+		return "K"
+	} else {
+		return "k"
+	}
 }
 
 func (k King) WithLocalMove(move Move, g *Game) (*Game, error) {

@@ -9,6 +9,7 @@ type Piece interface {
 	Color() PieceColor
 	Id() PieceId
 	Type() PieceType
+	String() string
 }
 
 type PieceMover interface {
@@ -98,7 +99,11 @@ type Queen struct {
 }
 
 func (q Queen) String() string {
-	return "Q"
+	if q.PieceColor == PieceColor_White {
+		return "Q"
+	} else {
+		return "q"
+	}
 }
 func (q Queen) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return q.deltaMover.gameWithMove(move.From, move.To, royalDeltas, 0, g)
@@ -123,7 +128,11 @@ type Rook struct {
 }
 
 func (r Rook) String() string {
-	return "R"
+	if r.PieceColor == PieceColor_White {
+		return "R"
+	} else {
+		return "r"
+	}
 }
 func (r Rook) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return r.deltaMover.gameWithMove(move.From, move.To, perpendicularDeltas, 0, g)
@@ -160,6 +169,14 @@ func (b Bishop) Type() PieceType {
 	return PieceType_Bishop
 }
 
+func (b Bishop) String() string {
+	if b.PieceColor == PieceColor_White {
+		return "B"
+	} else {
+		return "b"
+	}
+}
+
 func NewKnight(color PieceColor) Knight {
 	return Knight{pieceProps: newPieceProps(color)}
 }
@@ -180,4 +197,12 @@ func (k Knight) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
 }
 func (k Knight) Type() PieceType {
 	return PieceType_Knight
+}
+
+func (k Knight) String() string {
+	if k.PieceColor == PieceColor_White {
+		return "N"
+	} else {
+		return "n"
+	}
 }
