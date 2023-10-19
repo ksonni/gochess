@@ -3,8 +3,9 @@ package game
 import "fmt"
 
 type Game struct {
-	position *Position
-	numMoves int
+	position                             *Position
+	numMoves                             int
+	numMovesWithoutCaptureNorPawnAdvance int
 	resultAnalyzer
 }
 
@@ -30,6 +31,7 @@ func (g *Game) Move(move Move) error {
 	}
 	g.numMoves = result.numMoves
 	g.position = result.position
+	g.numMovesWithoutCaptureNorPawnAdvance = result.numMovesWithoutCaptureNorPawnAdvance
 	return nil
 }
 
@@ -136,14 +138,16 @@ func (g *Game) CountPieces() map[PieceColor]map[PieceType]int {
 
 func (g *Game) appendingPosition(board *Board) *Game {
 	return &Game{
-		position: g.position.Appending(board),
-		numMoves: g.numMoves + 1,
+		position:                             g.position.Appending(board),
+		numMoves:                             g.numMoves + 1,
+		numMovesWithoutCaptureNorPawnAdvance: g.numMovesWithoutCaptureNorPawnAdvance + 1,
 	}
 }
 
 func (g *Game) withPosition(board *Board) *Game {
 	return &Game{
-		position: g.position.Setting(board),
-		numMoves: g.numMoves + 1,
+		position:                             g.position.Setting(board),
+		numMoves:                             g.numMoves + 1,
+		numMovesWithoutCaptureNorPawnAdvance: g.numMovesWithoutCaptureNorPawnAdvance + 1,
 	}
 }

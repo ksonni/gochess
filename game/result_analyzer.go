@@ -100,12 +100,39 @@ func (a *resultAnalyzer) hasInsufficientMaterial(g *Game, color PieceColor) bool
 	return false
 }
 
-// TODO/implement
+/**
+* Position is considered the same, if all of the following are true (cf. https://www.fide.com/FIDE/handbook/LawsOfChess.pdf clause 9.2):
+*
+* 1. the same player has the move
+* 2. pieces of the same kind and colour occupy the same squares
+* 3. the possible moves of all the pieces of both players are the same, including:
+* 3.1. castling rights
+* 3.2. en passant captures
+*
+* Note: When a king or a rook is forced to move, it will lose its castling rights, if any, only after it is moved. (This should be obvious, but apparently it is not.)
+*
+* This means that our hash has the following inputs:
+* - side to move (e.g. "White")
+* - piece positions
+* - castling rights for White and for Black ("White: yes/no, Black: yes/no")
+* - en passant square (e.g. "a3", or "-" if none)
+*
+* The most straightforward way to implement this seems to have a string representation of the board, and then hash that.
+ */
 func (a *resultAnalyzer) hasReached3FoldRepetition(g *Game, color PieceColor) bool {
+	// TODO/implement
 	return false
 }
 
-// TODO/implement
+/**
+ * Last 50 consecutive moves have been made by each player without:
+ * 1. pawn move
+ * 2. capture
+ *
+ * (cf. https://www.fide.com/FIDE/handbook/LawsOfChess.pdf clause 9.3)
+ *
+ * We will add a counter to the game state, and increment it by 1 after each move. When it reaches 100, the game is a draw.
+ */
 func (a *resultAnalyzer) qualifiesFor50MoveRule(g *Game, color PieceColor) bool {
-	return false
+	return g.numMovesWithoutCaptureNorPawnAdvance >= 100
 }
