@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"runtime"
 	"strings"
 	"testing"
@@ -15,8 +14,8 @@ type ResultTestCase struct {
 func TestResults(t *testing.T) {
 	stalemate := DrawReason_Stalemate
 	insufficientMat := DrawReason_InusfficientMaterial
+	threeFold := DrawReason_3FoldRepetition
 	fiftyMoves := DrawReason_50Moves
-	// threeFold := DrawReason_3FoldRepetition
 
 	tests := map[string]ResultTestCase{
 		// Checkmate
@@ -158,8 +157,8 @@ func TestResults(t *testing.T) {
 		},
 	}
 
+	// 50-move rule
 	fiftyMoveTests := map[string]ResultTestCase{
-		// 50-move rule
 		"50-move rule": {
 			map[string]Piece{
 				"a8": NewKing(PieceColor_White),
@@ -191,19 +190,17 @@ func TestResults(t *testing.T) {
 		},
 	}
 
-	// threeFoldTests := map[string]ResultTestCase{
-	// 	3-fold repetition
-	// 	"3-fold repetition": {
-	// 		map[string]Piece{
-	// 			"a8": NewKing(PieceColor_White),
-	// 			"h1": NewKing(PieceColor_Black),
-	// 			"a7": NewRook(PieceColor_White),
-	// 			"h2": NewRook(PieceColor_Black),
-	// 		},
-	// 		ResultData{Result: GameResult_Active},
-	// 		// ResultData{Result: GameResult_Draw, DrawReason: &threeFold},
-	// 	},
-	// }
+	// 3-fold repetition
+	threeFoldTests := map[string]ResultTestCase{
+		"3-fold repetition": {
+			map[string]Piece{
+				"e6": NewKing(PieceColor_Black),
+				"e5": NewPawn(PieceColor_Black),
+				"e3": NewKing(PieceColor_White),
+			},
+			ResultData{Result: GameResult_Draw, DrawReason: &threeFold},
+		},
+	}
 
 	testResult := func(title string, test ResultTestCase, g *Game) {
 		valueOrNil := func(v *DrawReason) string {
@@ -313,6 +310,17 @@ func TestResults(t *testing.T) {
 		}
 	}
 
+	play3Fold := func(title string, test ResultTestCase, g *Game) {
+		for i := 0; i < 2; i++ {
+			// zug...
+			g.Move(Move{From: sq("e3"), To: sq("f3")})
+			g.Move(Move{From: sq("e6"), To: sq("d5")})
+			// ...zwang
+			g.Move(Move{From: sq("f3"), To: sq("e3")})
+			g.Move(Move{From: sq("d5"), To: sq("e6")})
+		}
+	}
+
 	for title, test := range tests {
 		g := createPosition(test.pos, true)
 		testResult(title, test, g)
@@ -321,6 +329,12 @@ func TestResults(t *testing.T) {
 	for title, test := range fiftyMoveTests {
 		g := createPosition(test.pos, false)
 		play50Moves(title, test, g)
+		testResult(title, test, g)
+	}
+
+	for title, test := range threeFoldTests {
+		g := createPosition(test.pos, false)
+		play3Fold(title, test, g)
 		testResult(title, test, g)
 	}
 

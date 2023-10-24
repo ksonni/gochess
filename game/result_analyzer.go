@@ -90,7 +90,7 @@ func (a *resultAnalyzer) testForDraw(g *Game, color PieceColor) (*DrawReason, bo
 	drawReason := DrawReason_InusfficientMaterial
 	if a.hasInsufficientMaterial(g, color) {
 		drawReason = DrawReason_InusfficientMaterial
-	} else if a.hasReached3FoldRepetition(g, color) {
+	} else if a.hasReached3FoldRepetition(g) {
 		drawReason = DrawReason_3FoldRepetition
 	} else if a.qualifiesFor50MoveRule(g, color) {
 		drawReason = DrawReason_50Moves
@@ -149,9 +149,8 @@ func (a *resultAnalyzer) hasInsufficientMaterial(g *Game, color PieceColor) bool
 *
 * The most straightforward way to implement this seems to have a string representation of the board, and then hash that.
  */
-func (a *resultAnalyzer) hasReached3FoldRepetition(g *Game, color PieceColor) bool {
-	// TODO/implement
-	return false
+func (a *resultAnalyzer) hasReached3FoldRepetition(g *Game) bool {
+	return g.threeFoldDrawReached
 }
 
 /**

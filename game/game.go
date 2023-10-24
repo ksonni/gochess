@@ -1,11 +1,16 @@
 package game
 
-import "fmt"
+import (
+	"crypto/md5"
+	"fmt"
+)
 
 type Game struct {
 	position                             *Position
 	numMoves                             int
 	numMovesWithoutCaptureNorPawnAdvance int
+	history                              map[string]int
+	threeFoldDrawReached                 bool
 	resultAnalyzer
 }
 
@@ -25,6 +30,12 @@ func (g *Game) Board() *Board {
 }
 
 func (g *Game) Move(move Move) error {
+	if _, exists := g.history[g.hash3Fold()]; !exists {
+		// This is the first move, and we need to initialize history
+		// XXX Ideally the state of setting up the board would be a separate game state, and there would be Game.Start(), after which the game would always be in a valid state, but for now we will just do this
+		g.history = make(map[string]int)
+		g.history[g.hash3Fold()] = 1
+	}
 	result, err := g.WithMove(move)
 	if err != nil {
 		return err
@@ -32,6 +43,8 @@ func (g *Game) Move(move Move) error {
 	g.numMoves = result.numMoves
 	g.position = result.position
 	g.numMovesWithoutCaptureNorPawnAdvance = result.numMovesWithoutCaptureNorPawnAdvance
+	g.history = result.history
+	g.threeFoldDrawReached = result.threeFoldDrawReached
 	return nil
 }
 
@@ -135,11 +148,28 @@ func (g *Game) CountPieces() map[PieceColor]map[PieceType]int {
 }
 
 func (g *Game) String() string {
+	s := g.string3Fold()
+	s += fmt.Sprintln("moves:", g.numMoves)
+	return s
+}
+
+// Helpers
+
+/**
+ * String representation of the game state for the purpose of the 3-fold-move draw.
+ *
+ * This is used in computing the 3-fold-move draw, i.e. it must capture the FIDE rules for 3-fold-move draw, and only those rules. See Game.String() for a more complete representation of the game state.
+ */
+func (g *Game) string3Fold() string {
 	s := ""
 	if g.position != nil && g.position.board != nil {
 		s += g.position.board.String()
 	}
-	s += fmt.Sprintln("move: ", g.MovingSide())
+	if g.MovingSide() == PieceColor_White {
+		s += "White to move\n"
+	} else {
+		s += "Black to move\n"
+	}
 	whiteCanCastle, blackCanCastle := g.castlingRights()
 	s += fmt.Sprintln("castling rights: White:", whiteCanCastle, "Black:", blackCanCastle)
 	enPassantSquare, canEnPassant := g.enPassantSquare()
@@ -152,7 +182,16 @@ func (g *Game) String() string {
 	return s
 }
 
-// Helpers
+/**
+ * Hash representation of the game state.
+ *
+ * Used in computing the 3-fold-move draw, i.e. two positions will have a different hash if and only if they are different according to the 3-fold-move-draw rule
+ */
+func (g *Game) hash3Fold() string {
+	data := g.string3Fold()
+	hash := md5.Sum([]byte(data))
+	return fmt.Sprintf("%x", hash)
+}
 
 func (g *Game) enPassantSquare() (Square, bool) {
 	// find all pawns in the game
@@ -177,17 +216,42 @@ func (g *Game) castlingRights() (bool, bool) {
 }
 
 func (g *Game) appendingPosition(board *Board) *Game {
-	return &Game{
-		position:                             g.position.Appending(board),
-		numMoves:                             g.numMoves + 1,
-		numMovesWithoutCaptureNorPawnAdvance: g.numMovesWithoutCaptureNorPawnAdvance + 1,
-	}
+	appending := true
+	return g._withPosition(board, appending)
 }
 
 func (g *Game) withPosition(board *Board) *Game {
-	return &Game{
-		position:                             g.position.Setting(board),
+	appending := false
+	return g._withPosition(board, appending)
+}
+
+func (g *Game) _withPosition(board *Board, appending bool) *Game {
+	newHistory := make(map[string]int)
+	for k, v := range g.history {
+		newHistory[k] = v
+	}
+	var myBoard *Position
+	if appending {
+		myBoard = g.position.Appending(board)
+	} else {
+		myBoard = g.position.Setting(board)
+	}
+	newGameState := &Game{
+		position:                             myBoard,
 		numMoves:                             g.numMoves + 1,
 		numMovesWithoutCaptureNorPawnAdvance: g.numMovesWithoutCaptureNorPawnAdvance + 1,
+		history:                              newHistory,
+		threeFoldDrawReached:                 g.threeFoldDrawReached,
 	}
+	newHash := newGameState.hash3Fold()
+	if _, exists := newGameState.history[newHash]; !exists {
+		newGameState.history[newHash] = 0
+	}
+	newGameState.history[newHash] += 1
+
+	if newGameState.history[newHash] > 2 {
+		newGameState.threeFoldDrawReached = true
+	}
+
+	return newGameState
 }
