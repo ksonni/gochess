@@ -6,16 +6,18 @@ import (
 	"testing"
 )
 
+type ResultTestCase struct {
+	pos    map[string]Piece
+	result ResultData
+}
+
 func TestResults(t *testing.T) {
 	stalemate := DrawReason_Stalemate
 	insufficientMat := DrawReason_InusfficientMaterial
 	fiftyMoves := DrawReason_50Moves
 	// threeFold := DrawReason_3FoldRepetition
 
-	tests := map[string]struct {
-		pos    map[string]Piece
-		result ResultData
-	}{
+	tests := map[string]ResultTestCase{
 		// Checkmate
 		"Sole king checkmate": {
 			map[string]Piece{
@@ -153,7 +155,9 @@ func TestResults(t *testing.T) {
 			},
 			ResultData{Result: GameResult_Active},
 		},
+	}
 
+	fiftyMoveTests := map[string]ResultTestCase{
 		// 50-move rule
 		"50-move rule": {
 			map[string]Piece{
@@ -184,128 +188,137 @@ func TestResults(t *testing.T) {
 			},
 			ResultData{Result: GameResult_Active},
 		},
-
-		// 3-fold repetition
-		// "3-fold repetition": {
-		// 	map[string]Piece{
-		// 		"a8": NewKing(PieceColor_White),
-		// 		"h1": NewKing(PieceColor_Black),
-		// 		"a7": NewRook(PieceColor_White),
-		// 		"h2": NewRook(PieceColor_Black),
-		// 	},
-		// 	ResultData{Result: GameResult_Active},
-		// 	// ResultData{Result: GameResult_Draw, DrawReason: &threeFold},
-		// },
 	}
 
-	for title, pos := range tests {
-		g := createPosition(pos.pos, true)
-		// Hack
-		if strings.HasPrefix(title, "50-move rule") {
-			var err error
+	// threeFoldTests := map[string]ResultTestCase{
+	// 	3-fold repetition
+	// 	"3-fold repetition": {
+	// 		map[string]Piece{
+	// 			"a8": NewKing(PieceColor_White),
+	// 			"h1": NewKing(PieceColor_Black),
+	// 			"a7": NewRook(PieceColor_White),
+	// 			"h2": NewRook(PieceColor_Black),
+	// 		},
+	// 		ResultData{Result: GameResult_Active},
+	// 		// ResultData{Result: GameResult_Draw, DrawReason: &threeFold},
+	// 	},
+	// }
 
-			g = createPosition(pos.pos, false) // reset the board
-
-			// Make the moves
-			type Direction int
-			const (
-				Direction_Up Direction = iota
-				Direction_Down
-				Direction_Left
-				Direction_Right
-			)
-			directionWhite := Direction_Right
-			directionBlack := Direction_Left
-			whitePos := sq("a7")
-			blackPos := sq("h2")
-			nextPos := func(pos Square, direction Direction) Square {
-				switch direction {
-				case Direction_Up:
-					return pos.Adding(Square{0, 1})
-				case Direction_Down:
-					return pos.Adding(Square{0, -1})
-				case Direction_Left:
-					return pos.Adding(Square{-1, 0})
-				case Direction_Right:
-					return pos.Adding(Square{1, 0})
-				}
-				unreachable(t)
-				panic("unreachable") // prevent compiler from complaining about no return statement
-			}
-			for i := 0; i < 50; i++ {
-
-				// White's move
-				nextWhitePos := nextPos(whitePos, directionWhite)
-				if i == 0 && strings.Contains(title, "pawn move") {
-					// move the pawn
-					err = g.Move(Move{From: sq("c7"), To: sq("c8"), Promotion: NewQueen(PieceColor_White)})
-				} else {
-					err = g.Move(Move{From: whitePos, To: nextWhitePos})
-				}
-				if err != nil {
-					t.Errorf("%s: unexpected error: %v", title, err)
-				}
-				if g.computeResult(g).Result != GameResult_Active {
-					t.Errorf("%s: triggered prematurely (White's move %d)", title, (i / 2))
-				}
-
-				// Black's move
-				nextBlackPos := nextPos(blackPos, directionBlack)
-				err = g.Move(Move{From: blackPos, To: nextBlackPos})
-				if err != nil {
-					t.Fatalf("%s: unexpected error: %v", title, err)
-				}
-
-				// adjust directions, based on where the pieces came from
-				if nextWhitePos.File == 0 {
-					if directionWhite == Direction_Left {
-						directionWhite = Direction_Down
-					} else if directionWhite == Direction_Down {
-						directionWhite = Direction_Right
-					} else {
-						unreachable(t)
-					}
-				} else if nextWhitePos.File == 6 {
-					directionWhite = Direction_Left
-				}
-				if nextBlackPos.File == 7 {
-					if directionBlack == Direction_Right {
-						directionBlack = Direction_Up
-					} else if directionBlack == Direction_Up {
-						directionBlack = Direction_Left
-					} else {
-						unreachable(t)
-					}
-				} else if nextBlackPos.File == 1 {
-					directionBlack = Direction_Right
-				}
-
-				// discard the old positions
-				whitePos = nextWhitePos
-				blackPos = nextBlackPos
-
-				// check that we're still in the game
-				if i < (50-1) && g.computeResult(g).Result != GameResult_Active {
-					t.Fatalf("%s: triggered prematurely (Black's move %d)", title, (i / 2))
-				}
-			}
-		} else if strings.HasPrefix(title, "3-fold repetition") {
-			// TODO Make the moves
-		}
+	testResult := func(title string, test ResultTestCase, g *Game) {
 		result := g.computeResult(g)
-		if result.Result != pos.result.Result {
+		if result.Result != test.result.Result {
 			t.Errorf("%s: got game result %v, want %v",
-				title, result.Result, pos.result.Result)
+				title, result.Result, test.result.Result)
 		}
-		if pos.result.DrawReason != nil {
-			if *result.DrawReason != *pos.result.DrawReason {
+		if test.result.DrawReason != nil {
+			if *result.DrawReason != *test.result.DrawReason {
 				t.Errorf("%s: got draw reason %v, want %v",
-					title, *result.DrawReason, *pos.result.DrawReason)
+					title, *result.DrawReason, *test.result.DrawReason)
 			}
 		} else if result.DrawReason != nil {
 			t.Errorf("%s: draw reason got: %v, want nil", title, *result.DrawReason)
 		}
 	}
+
+	play50Moves := func(title string, test ResultTestCase, g *Game) {
+		var err error
+
+		// Make the moves
+		type Direction int
+		const (
+			Direction_Up Direction = iota
+			Direction_Down
+			Direction_Left
+			Direction_Right
+		)
+		directionWhite := Direction_Right
+		directionBlack := Direction_Left
+		whitePos := sq("a7")
+		blackPos := sq("h2")
+		nextPos := func(pos Square, direction Direction) Square {
+			switch direction {
+			case Direction_Up:
+				return pos.Adding(Square{0, 1})
+			case Direction_Down:
+				return pos.Adding(Square{0, -1})
+			case Direction_Left:
+				return pos.Adding(Square{-1, 0})
+			case Direction_Right:
+				return pos.Adding(Square{1, 0})
+			}
+			unreachable(t)
+			panic("unreachable") // prevent compiler from complaining about no return statement
+		}
+		for i := 0; i < 50; i++ {
+
+			// White's move
+			nextWhitePos := nextPos(whitePos, directionWhite)
+			if i == 0 && strings.Contains(title, "pawn move") {
+				// move the pawn
+				err = g.Move(Move{From: sq("c7"), To: sq("c8"), Promotion: NewQueen(PieceColor_White)})
+			} else {
+				err = g.Move(Move{From: whitePos, To: nextWhitePos})
+			}
+			if err != nil {
+				t.Errorf("%s: unexpected error: %v", title, err)
+			}
+			if g.computeResult(g).Result != GameResult_Active {
+				t.Errorf("%s: triggered prematurely (White's move %d)", title, (i / 2))
+			}
+
+			// Black's move
+			nextBlackPos := nextPos(blackPos, directionBlack)
+			err = g.Move(Move{From: blackPos, To: nextBlackPos})
+			if err != nil {
+				t.Fatalf("%s: unexpected error: %v", title, err)
+			}
+
+			// adjust directions, based on where the pieces came from
+			if nextWhitePos.File == 0 {
+				if directionWhite == Direction_Left {
+					directionWhite = Direction_Down
+				} else if directionWhite == Direction_Down {
+					directionWhite = Direction_Right
+				} else {
+					unreachable(t)
+				}
+			} else if nextWhitePos.File == 6 {
+				directionWhite = Direction_Left
+			}
+			if nextBlackPos.File == 7 {
+				if directionBlack == Direction_Right {
+					directionBlack = Direction_Up
+				} else if directionBlack == Direction_Up {
+					directionBlack = Direction_Left
+				} else {
+					unreachable(t)
+				}
+			} else if nextBlackPos.File == 1 {
+				directionBlack = Direction_Right
+			}
+
+			// discard the old positions
+			whitePos = nextWhitePos
+			blackPos = nextBlackPos
+
+			// check that we're still in the game
+			if i < (50-1) && g.computeResult(g).Result != GameResult_Active {
+				t.Fatalf("%s: triggered prematurely (Black's move %d)", title, (i / 2))
+			}
+		}
+	}
+
+	for title, test := range tests {
+		g := createPosition(test.pos, true)
+		testResult(title, test, g)
+	}
+
+	for title, test := range fiftyMoveTests {
+		g := createPosition(test.pos, false)
+		play50Moves(title, test, g)
+		testResult(title, test, g)
+	}
+
 }
 
 func unreachable(t *testing.T) {
