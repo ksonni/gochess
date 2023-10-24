@@ -1,5 +1,7 @@
 package game
 
+import "fmt"
+
 type resultAnalyzer struct{}
 
 type Result int
@@ -10,6 +12,19 @@ const (
 	GameResult_Checkmate
 )
 
+func (r Result) String() string {
+	switch r {
+	case GameResult_Active:
+		return "Active"
+	case GameResult_Draw:
+		return "Draw"
+	case GameResult_Checkmate:
+		return "Checkmate"
+	default:
+		return fmt.Sprintf("%d", int(r))
+	}
+}
+
 type DrawReason int
 
 const (
@@ -18,6 +33,21 @@ const (
 	DrawReason_InusfficientMaterial
 	DrawReason_50Moves
 )
+
+func (r DrawReason) String() string {
+	switch r {
+	case DrawReason_Stalemate:
+		return "Stalemate"
+	case DrawReason_3FoldRepetition:
+		return "3-fold repetition"
+	case DrawReason_InusfficientMaterial:
+		return "Insufficient material"
+	case DrawReason_50Moves:
+		return "50 moves without capture or pawn advance"
+	default:
+		return fmt.Sprintf("%d", int(r))
+	}
+}
 
 type ResultData struct {
 	Result     Result
@@ -132,6 +162,7 @@ func (a *resultAnalyzer) hasReached3FoldRepetition(g *Game, color PieceColor) bo
  * (cf. https://www.fide.com/FIDE/handbook/LawsOfChess.pdf clause 9.3)
  *
  * We will add a counter to the game state, and increment it by 1 after each move. When it reaches 100, the game is a draw.
+ * Whenever a pawn is moved or a capture is made, the counter is reset to 0.
  */
 func (a *resultAnalyzer) qualifiesFor50MoveRule(g *Game, color PieceColor) bool {
 	return g.numMovesWithoutCaptureNorPawnAdvance >= 100

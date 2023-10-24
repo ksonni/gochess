@@ -36,11 +36,16 @@ func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, m
 
 func (mover deltaMover) gameWithMove(from Square, to Square, deltas []Square,
 	maxSteps int, game *Game) (*Game, error) {
+	_, isNormalCapture := game.Board().GetPiece(to) // note: en-passant capture is a pawn move, so in that case the 50-move counter will be reset anyway
 	b, err := mover.planMove(from, to, deltas, maxSteps, game)
 	if err != nil {
 		return nil, err
 	}
-	return game.appendingPosition(b), nil
+	newGame := game.appendingPosition(b)
+	if isNormalCapture {
+		newGame.numMovesWithoutCaptureNorPawnAdvance = 0
+	}
+	return newGame, nil
 }
 
 func (mover deltaMover) planMove(from Square, to Square, deltas []Square,

@@ -6,8 +6,6 @@ type gameMaker struct{}
 func NewGame() *Game {
 	game := new(Game)
 	game.position = &Position{board: NewBoard()}
-	game.numMoves = 0
-	game.numMovesWithoutCaptureNorPawnAdvance = 0
 	i := gameMaker{}
 	i.initializePieces(game.Board())
 	return game
