@@ -295,7 +295,7 @@ func TestResults(t *testing.T) {
 		result := g.computeResult(g)
 		if result.Result != pos.result.Result {
 			t.Errorf("%s: got game result %v, want %v",
-				title, result.Result, GameResult_Checkmate)
+				title, result.Result, pos.result.Result)
 		}
 		if pos.result.DrawReason != nil {
 			if *result.DrawReason != *pos.result.DrawReason {

@@ -1,5 +1,7 @@
 package game
 
+import "fmt"
+
 type resultAnalyzer struct{}
 
 type Result int
@@ -10,6 +12,19 @@ const (
 	GameResult_Checkmate
 )
 
+func (r Result) String() string {
+	switch r {
+	case GameResult_Active:
+		return "Active"
+	case GameResult_Draw:
+		return "Draw"
+	case GameResult_Checkmate:
+		return "Checkmate"
+	default:
+		return fmt.Sprintf("%d", int(r))
+	}
+}
+
 type DrawReason int
 
 const (
@@ -18,6 +33,21 @@ const (
 	DrawReason_InusfficientMaterial
 	DrawReason_50Moves
 )
+
+func (r DrawReason) String() string {
+	switch r {
+	case DrawReason_Stalemate:
+		return "Stalemate"
+	case DrawReason_3FoldRepetition:
+		return "3-fold repetition"
+	case DrawReason_InusfficientMaterial:
+		return "Insufficient material"
+	case DrawReason_50Moves:
+		return "50 moves without capture or pawn advance"
+	default:
+		return fmt.Sprintf("%d", int(r))
+	}
+}
 
 type ResultData struct {
 	Result     Result
