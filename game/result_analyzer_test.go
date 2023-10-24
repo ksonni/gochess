@@ -1,6 +1,7 @@
 package game
 
 import (
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -228,7 +229,8 @@ func TestResults(t *testing.T) {
 				case Direction_Right:
 					return pos.Adding(Square{1, 0})
 				}
-				panic("unreachable")
+				unreachable(t)
+				panic("unreachable") // prevent compiler from complaining about no return statement
 			}
 			for i := 0; i < 50; i++ {
 
@@ -240,7 +242,7 @@ func TestResults(t *testing.T) {
 				} else {
 					err = g.Move(Move{From: whitePos, To: nextWhitePos})
 				}
-				if err != nil { // XXX should be an exception
+				if err != nil {
 					t.Errorf("%s: unexpected error: %v", title, err)
 				}
 				if g.computeResult(g).Result != GameResult_Active {
@@ -250,9 +252,8 @@ func TestResults(t *testing.T) {
 				// Black's move
 				nextBlackPos := nextPos(blackPos, directionBlack)
 				err = g.Move(Move{From: blackPos, To: nextBlackPos})
-				if err != nil { // XXX should be an exception
-					t.Errorf("%s: unexpected error: %v", title, err)
-					return
+				if err != nil {
+					t.Fatalf("%s: unexpected error: %v", title, err)
 				}
 
 				// adjust directions, based on where the pieces came from
@@ -262,7 +263,7 @@ func TestResults(t *testing.T) {
 					} else if directionWhite == Direction_Down {
 						directionWhite = Direction_Right
 					} else {
-						panic("unreachable")
+						unreachable(t)
 					}
 				} else if nextWhitePos.File == 6 {
 					directionWhite = Direction_Left
@@ -273,7 +274,7 @@ func TestResults(t *testing.T) {
 					} else if directionBlack == Direction_Up {
 						directionBlack = Direction_Left
 					} else {
-						panic("unreachable")
+						unreachable(t)
 					}
 				} else if nextBlackPos.File == 1 {
 					directionBlack = Direction_Right
@@ -285,8 +286,7 @@ func TestResults(t *testing.T) {
 
 				// check that we're still in the game
 				if i < (50-1) && g.computeResult(g).Result != GameResult_Active {
-					t.Errorf("%s: triggered prematurely (Black's move %d)", title, (i / 2))
-					return
+					t.Fatalf("%s: triggered prematurely (Black's move %d)", title, (i / 2))
 				}
 			}
 		} else if strings.HasPrefix(title, "3-fold repetition") {
@@ -306,4 +306,9 @@ func TestResults(t *testing.T) {
 			t.Errorf("%s: draw reason got: %v, want nil", title, *result.DrawReason)
 		}
 	}
+}
+
+func unreachable(t *testing.T) {
+	_, file, line, _ := runtime.Caller(1)
+	t.Fatalf("%s:%d: internal test error: reached an unreachable branch", file, line)
 }
