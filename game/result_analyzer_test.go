@@ -171,7 +171,7 @@ func TestResults(t *testing.T) {
 				"h2": NewRook(PieceColor_Black),
 				"b7": NewPawn(PieceColor_Black), // will be captured on move 1
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &fiftyMoves},
+			ResultData{Result: GameResult_Active},
 		},
 		"50-move rule -- should not trigger (pawn move)": {
 			map[string]Piece{
@@ -181,7 +181,7 @@ func TestResults(t *testing.T) {
 				"h2": NewRook(PieceColor_Black),
 				"c7": NewPawn(PieceColor_White), // will be moved on move 1 and promoted to Queen
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &fiftyMoves},
+			ResultData{Result: GameResult_Active},
 		},
 
 		// 3-fold repetition

@@ -101,7 +101,9 @@ func (p Pawn) planPawnMovement(move Move, movement *pawnMovement, g *Game) (*Gam
 	if movement.secondaryCapture != nil {
 		board.clearSquare(*movement.secondaryCapture)
 	}
-	return g.appendingPosition(board), nil
+	newGame := g.appendingPosition(board)
+	newGame.numMovesWithoutCaptureNorPawnAdvance = 0
+	return newGame, nil
 }
 
 func (p Pawn) computePawnMovements(from Square, g *Game) map[Square]*pawnMovement {
