@@ -206,18 +206,22 @@ func TestResults(t *testing.T) {
 	// }
 
 	testResult := func(title string, test ResultTestCase, g *Game) {
+		valueOrNil := func(v *DrawReason) string {
+			if v != nil {
+				return v.String()
+			}
+			return "nil"
+		}
 		result := g.computeResult(g)
 		if result.Result != test.result.Result {
 			t.Errorf("%s: got game result %v, want %v",
 				title, result.Result, test.result.Result)
-		}
-		if test.result.DrawReason != nil {
-			if *result.DrawReason != *test.result.DrawReason {
-				t.Errorf("%s: got draw reason %v, want %v",
-					title, *result.DrawReason, *test.result.DrawReason)
+		} else {
+			expected := valueOrNil(test.result.DrawReason)
+			actual := valueOrNil(result.DrawReason)
+			if expected != actual {
+				t.Errorf("%s: draw reason got %s, want %s", title, actual, expected)
 			}
-		} else if result.DrawReason != nil {
-			t.Errorf("%s: draw reason got: %v, want nil", title, *result.DrawReason)
 		}
 	}
 
