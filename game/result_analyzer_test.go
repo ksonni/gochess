@@ -68,6 +68,7 @@ func TestResults(t *testing.T) {
 			panic("unreachable") // prevent compiler from complaining about no return statement
 		}
 		for i := 0; i < 50; i++ {
+			// The 'a' and 'h' files have the White and the Black king, respectively, so we cannot go there with the opposing colour rook (lest we give a check). Apart from that, we snake up / down the board until we've made 50 moves with each rook. Note that the rooks pass each other in the middle of the board, moving at the same time from the 4th to the 5th rank and vice versa.
 
 			// White's move
 			nextWhitePos := nextPos(whitePos, directionWhite)
@@ -86,7 +87,7 @@ func TestResults(t *testing.T) {
 			must(g.Move(Move{From: blackPos, To: nextBlackPos}))
 
 			// adjust directions, based on where the pieces came from
-			if nextWhitePos.File == 0 {
+			if nextWhitePos.String()[0] == 'a' {
 				if directionWhite == Direction_Left {
 					directionWhite = Direction_Down
 				} else if directionWhite == Direction_Down {
@@ -94,10 +95,10 @@ func TestResults(t *testing.T) {
 				} else {
 					unreachable(t)
 				}
-			} else if nextWhitePos.File == 6 {
+			} else if nextWhitePos.String()[0] == 'g' { // turn around before reaching 'h', because that's where the Black king is
 				directionWhite = Direction_Left
 			}
-			if nextBlackPos.File == 7 {
+			if nextBlackPos.String()[0] == 'h' {
 				if directionBlack == Direction_Right {
 					directionBlack = Direction_Up
 				} else if directionBlack == Direction_Up {
@@ -105,7 +106,7 @@ func TestResults(t *testing.T) {
 				} else {
 					unreachable(t)
 				}
-			} else if nextBlackPos.File == 1 {
+			} else if nextBlackPos.String()[0] == 'b' { // turn around before reaching 'a', because that's where the White king is
 				directionBlack = Direction_Right
 			}
 
@@ -121,19 +122,16 @@ func TestResults(t *testing.T) {
 		return g
 	}
 
-	play3Fold := func(title string, test ResultTestCase, g *Game) *Game {
-		g = createPosition(test.pos, false)
-
+	play3Fold := func(title string, test ResultTestCase, g *Game, white [2]Square, black [2]Square) *Game {
 		for i := 0; i < 2; i++ {
 			// zug...
-			must(g.Move(Move{From: sq("e3"), To: sq("f3")}))
-			must(g.Move(Move{From: sq("e6"), To: sq("d5")}))
+			must(g.Move(Move{From: white[0], To: white[1]}))
+			must(g.Move(Move{From: black[0], To: black[1]}))
 			// ...zwang
-			must(g.Move(Move{From: sq("f3"), To: sq("e3")}))
-			must(g.Move(Move{From: sq("d5"), To: sq("e6")}))
+			must(g.Move(Move{From: white[1], To: white[0]}))
+			must(g.Move(Move{From: black[1], To: black[0]}))
 		}
 		return g
-
 	}
 	tests := map[string]ResultTestCase{
 		// Checkmate
@@ -317,7 +315,47 @@ func TestResults(t *testing.T) {
 				"e3": NewKing(PieceColor_White),
 			},
 			result: ResultData{Result: GameResult_Draw, DrawReason: &threeFold},
-			eval:   play3Fold,
+			eval: func(title string, test ResultTestCase, g *Game) *Game {
+				g = createPosition(test.pos, false)
+				return play3Fold(title, test, g, [2]Square{sq("e3"), sq("f3")}, [2]Square{sq("e6"), sq("d5")})
+			},
+		},
+		"3-fold repetition -- should not trigger (castling rights)": {
+			pos: map[string]Piece{
+				"e6": NewKing(PieceColor_Black),
+				"e5": NewPawn(PieceColor_Black),
+				"e1": NewKing(PieceColor_White),
+				"a1": NewRook(PieceColor_White),
+			},
+			result: ResultData{Result: GameResult_Active},
+			eval: func(title string, test ResultTestCase, g *Game) *Game {
+				g = createPosition(test.pos, false)
+
+				white := [2]Square{sq("e1"), sq("f1")}
+				black := [2]Square{sq("e6"), sq("d5")}
+
+				return play3Fold(title, test, g, white, black)
+			},
+		},
+		"3-fold repetition -- should not trigger (en-passant square)": {
+			pos: map[string]Piece{
+				"e6": NewKing(PieceColor_White),
+				"e5": NewPawn(PieceColor_White),
+				"e3": NewKing(PieceColor_Black),
+				"d7": NewPawn(PieceColor_Black),
+			},
+			result: ResultData{Result: GameResult_Active},
+			eval: func(title string, test ResultTestCase, g *Game) *Game {
+				g = createPosition(test.pos, true)
+
+				// Create the en-passant square on "d6"
+				must(g.Move(Move{From: sq("d7"), To: sq("d5")}))
+
+				white := [2]Square{sq("e6"), sq("d5")}
+				black := [2]Square{sq("e3"), sq("f3")}
+
+				return play3Fold(title, test, g, white, black)
+			},
 		},
 	}
 
