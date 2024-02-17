@@ -5,7 +5,7 @@ type gameMaker struct{}
 
 func NewGame() *Game {
 	game := new(Game)
-	game.position = &Position{board: NewBoard()}
+	game.board = NewBoard()
 	game.castlingSquares = make(map[Square]SquareMovementStatus)
 	i := gameMaker{}
 	i.initializePieces(game.Board(), game.castlingSquares)
