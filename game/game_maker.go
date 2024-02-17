@@ -1,30 +1,26 @@
 package game
 
-// Initializes the board to start a new game
-type gameMaker struct{}
-
-func NewGame() *Game {
-	game := new(Game)
+func NewGameState() *GameState {
+	game := new(GameState)
 	game.board = NewBoard()
 	game.castlingSquares = make(map[Square]SquareMovementStatus)
-	i := gameMaker{}
-	i.initializePieces(game.Board(), game.castlingSquares)
+	initializePieces(game.Board(), game.castlingSquares)
 	return game
 }
 
-func (i *gameMaker) initializePieces(board *Board, castlingSquares map[Square]SquareMovementStatus) {
+func initializePieces(board *Board, castlingSquares map[Square]SquareMovementStatus) {
 	whitePiecesRank := 0
 	whitePawnsRank := whitePiecesRank + 1
-	i.populatePawns(board, PieceColor_White, whitePawnsRank)
-	i.populatePieces(board, PieceColor_White, whitePiecesRank, castlingSquares)
+	populatePawns(board, PieceColor_White, whitePawnsRank)
+	populatePieces(board, PieceColor_White, whitePiecesRank, castlingSquares)
 
 	blackPawnsRank := board.NumRanks() - 1 - whitePawnsRank
 	blackPiecesRank := board.NumRanks() - 1 - whitePiecesRank
-	i.populatePawns(board, PieceColor_Black, blackPawnsRank)
-	i.populatePieces(board, PieceColor_Black, blackPiecesRank, castlingSquares)
+	populatePawns(board, PieceColor_Black, blackPawnsRank)
+	populatePieces(board, PieceColor_Black, blackPiecesRank, castlingSquares)
 }
 
-func (i *gameMaker) populatePieces(board *Board, color PieceColor, rank int, castlingSquares map[Square]SquareMovementStatus) {
+func populatePieces(board *Board, color PieceColor, rank int, castlingSquares map[Square]SquareMovementStatus) {
 	pieces := []Piece{
 		NewRook(color),
 		NewKnight(color),
@@ -45,7 +41,7 @@ func (i *gameMaker) populatePieces(board *Board, color PieceColor, rank int, cas
 	}
 }
 
-func (i *gameMaker) populatePawns(board *Board, color PieceColor, rank int) {
+func populatePawns(board *Board, color PieceColor, rank int) {
 	for file := 0; file < board.NumFiles(); file++ {
 		board.setPiece(
 			NewPawn(color),

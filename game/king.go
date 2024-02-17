@@ -24,12 +24,12 @@ func (k King) String() string {
 	return "K"
 }
 
-func (k King) WithLocalMove(move Move, g *Game) (*Game, error) {
+func (k King) WithLocalMove(move Move, g *GameState) (*GameState, error) {
 	from, to := move.From, move.To
 	// First check if normal movement possible
 	result, err := k.deltaMover.planMove(from, to, royalDeltas, 1, g)
 	if err == nil {
-		return g.appendingPosition(result), nil
+		return g.appendingPosition(result, move, AppendPosParams{}), nil
 	}
 
 	// Attempt castling
@@ -39,11 +39,11 @@ func (k King) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return nil, fmt.Errorf("king: not a valid move")
 }
 
-func (k King) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (k King) ComputeAttackedSquares(sq Square, g *GameState) map[Square]bool {
 	return k.deltaMover.computeAttackedSquares(sq, royalDeltas, 1, g)
 }
 
-func (k King) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+func (k King) PlanPossibleMovesLocally(from Square, g *GameState) []MovePlan {
 	moves := k.deltaMover.planPossibleMoves(from, royalDeltas, 1, g)
 	moves = append(moves, k.planPossibleCastlingMoves(from, nil, g)...)
 	return moves
@@ -54,7 +54,7 @@ func (k King) Type() PieceType {
 
 // Helpers
 
-func (k King) planPossibleCastlingMoves(from Square, to *Square, g *Game) []MovePlan {
+func (k King) planPossibleCastlingMoves(from Square, to *Square, g *GameState) []MovePlan {
 	moves := []MovePlan{}
 
 	// Computed attack map
@@ -87,9 +87,10 @@ func (k King) planPossibleCastlingMoves(from Square, to *Square, g *Game) []Move
 		out := board.Clone()
 		out.jumpPiece(from, kingTargetSquare)
 		out.jumpPiece(rookSquare, rookSquare.Adding(config.rookDelta))
+		move := Move{From: from, To: kingTargetSquare}
 		moves = append(moves, MovePlan{
-			Move: Move{From: from, To: kingTargetSquare},
-			Game: g.appendingPosition(out),
+			Move: move,
+			Game: g.appendingPosition(out, move, AppendPosParams{}),
 		})
 	}
 

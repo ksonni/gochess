@@ -131,7 +131,7 @@ type targetedSquaresTestInput struct {
 	jump       bool
 }
 
-type targetedSquaresTestFn = func(title string, g *Game,
+type targetedSquaresTestFn = func(title string, g *GameState,
 	testSquare string, want []string, t *testing.T)
 
 func runTargetedSquaresTests(tests map[string]targetedSquaresTestInput,
@@ -146,7 +146,7 @@ func runAttackedSquaresTests(tests map[string]targetedSquaresTestInput, t *testi
 	runTargetedSquaresTests(tests, testAttackedSquares, t)
 }
 
-func testAttackedSquares(title string, g *Game, testSquare string, want []string, t *testing.T) {
+func testAttackedSquares(title string, g *GameState, testSquare string, want []string, t *testing.T) {
 	attackedResult := g.ComputeAttackedSquares(sq(testSquare))
 	assertSquareMapEquals(title, attackedResult, want, t)
 }
@@ -155,7 +155,7 @@ func runPossibleMovesTests(tests map[string]targetedSquaresTestInput, t *testing
 	runTargetedSquaresTests(tests, testPossibleMoves, t)
 }
 
-func testPossibleMoves(title string, g *Game, testSquare string, want []string, t *testing.T) {
+func testPossibleMoves(title string, g *GameState, testSquare string, want []string, t *testing.T) {
 	possibleMoves := g.PlanPossibleMoves(sq(testSquare))
 	sqMap := make(map[Square]bool)
 	for _, move := range possibleMoves {
