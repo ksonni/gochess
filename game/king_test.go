@@ -102,11 +102,11 @@ var castles = map[string]castleData{
 
 func TestCastling(t *testing.T) {
 	for title, config := range castles {
-		g := NewGame()
+		g := NewGameState()
 		clearSquares(g, config.clearSquares...)
-		continueGame(title, config.otherMoves, false, g, t)
+		g = continueGame(title, config.otherMoves, false, g, t)
 		kingMove, rookMove, mustFail := config.kingMove, config.rookMove, config.castleFails
-		err := g.Move(kingMove.Move())
+		g2, err := g.WithMove(kingMove.Move())
 		if mustFail {
 			if err == nil {
 				t.Errorf("%s: castling did not fail when expected", title)
@@ -117,7 +117,7 @@ func TestCastling(t *testing.T) {
 			t.Errorf("%s: castling failed: %v", title, err)
 			continue
 		}
-		board := g.Board().Clone()
+		board := g2.Board().Clone()
 		if piece, exists := board.GetPiece(sq(kingMove.to)); !exists {
 			if _, isKing := piece.(King); !isKing {
 				t.Errorf("%s: king not found on %s", title, kingMove.to)
@@ -139,9 +139,9 @@ func TestCastling(t *testing.T) {
 
 func TestPossibleCastleMoves(t *testing.T) {
 	for title, config := range castles {
-		g := NewGame()
+		g := NewGameState()
 		clearSquares(g, config.clearSquares...)
-		continueGame(title, config.otherMoves, false, g, t)
+		g = continueGame(title, config.otherMoves, false, g, t)
 		moves := g.PlanPossibleMoves(sq(config.kingMove.from))
 		squares := make(map[Square]bool)
 		for _, move := range moves {

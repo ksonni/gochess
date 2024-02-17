@@ -177,7 +177,8 @@ func testEnPassant(title string, setupMoves []testMove, enPassant testMove,
 	piece, _ := g.Board().GetPiece(move.From)
 	moves := g.PlanPossibleMoves(move.From)
 	assertMovePlanSquares(title+": possible moves: ", moves, possibleMoves, t)
-	if err := g.Move(move); err != nil {
+	g2, err := g.WithMove(move)
+	if err != nil {
 		if !mustFail {
 			t.Errorf("%s: valid empassant move from %v to %v failed: %v",
 				title, move.From, move.To, err)
@@ -189,7 +190,7 @@ func testEnPassant(title string, setupMoves []testMove, enPassant testMove,
 			title, move.From, move.To)
 		return
 	}
-	b := g.Board()
+	b := g2.Board()
 	assertSquareEmpty(title, enPassant.from, b, t)
 	assertPawn(title, enPassant.to, piece.Color(), b, t)
 	assertSquareEmpty(title, capturedSq, b, t)
@@ -210,7 +211,8 @@ func testPromotion(title string, pawnSquare string, promotionMove testMove,
 		t.Errorf("%s: promotion got %d possible positions, want %d", title, lGot, lWant)
 	}
 	assertMovePlanSquares(title, moves, possibleMoves, t)
-	if err := g.Move(move); err != nil {
+	g2, err := g.WithMove(move)
+	if err != nil {
 		if !mustFail {
 			t.Errorf("%s: promotion failed: %v", title, err)
 		}
@@ -221,7 +223,7 @@ func testPromotion(title string, pawnSquare string, promotionMove testMove,
 			title, promotionMove.from, promotionMove.to)
 		return
 	}
-	if piece, ok := g.Board().GetPiece(sq(promotionMove.to)); !ok || piece.Id() != promoted.Id() {
+	if piece, ok := g2.Board().GetPiece(sq(promotionMove.to)); !ok || piece.Id() != promoted.Id() {
 		t.Errorf("%s: promoted piece not found on %s", title, promotionMove.to)
 	}
 }

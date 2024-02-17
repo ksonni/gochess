@@ -15,18 +15,18 @@ func TestAttackedSquaresBySide(t *testing.T) {
 }
 
 func TestIsSideInCheck(t *testing.T) {
-	g := NewGame()
+	g := NewGameState()
 	board := g.Board().Clone()
 
 	board.jumpPiece(sq("e8"), sq("e3"))
-	g = g.withPosition(board)
+	g = gameWithPosition(g, board)
 
 	if !g.IsSideInCheck(PieceColor_Black) {
 		t.Errorf("Black must be in check")
 	}
 
 	board.jumpPiece(sq("e3"), sq("e4"))
-	g = g.withPosition(board)
+	g = gameWithPosition(g, board)
 
 	if g.IsSideInCheck(PieceColor_Black) {
 		t.Errorf("Black must not be in check")
@@ -44,32 +44,35 @@ func (m testMove) Move() Move {
 	return Move{From: sq(m.from), To: sq(m.to)}
 }
 
-func playGame(title string, moves []testMove, jump bool, t *testing.T) *Game {
-	return continueGame(title, moves, jump, NewGame(), t)
+func playGame(title string, moves []testMove, jump bool, t *testing.T) *GameState {
+	return continueGame(title, moves, jump, NewGameState(), t)
 }
 
-func continueGame(title string, moves []testMove, jump bool, g *Game, t *testing.T) *Game {
+func continueGame(title string, moves []testMove, jump bool, g *GameState, t *testing.T) *GameState {
+	currentGame := g
 	for _, move := range moves {
 		if !jump {
-			if err := g.Move(move.Move()); err != nil {
+			nextGame, err := currentGame.WithMove(move.Move())
+			if err != nil {
 				t.Errorf("%s: move %s to %s failed: %v", title, move.from, move.to, err)
-				return g
+				return currentGame
 			}
+			currentGame = nextGame
 		} else {
-			g.Board().jumpPiece(sq(move.from), sq(move.to))
+			currentGame.Board().jumpPiece(sq(move.from), sq(move.to))
 		}
 	}
-	return g
+	return currentGame
 }
 
-func clearSquares(g *Game, squares ...string) {
+func clearSquares(g *GameState, squares ...string) {
 	for _, s := range squares {
 		g.Board().clearSquare(sq(s))
 	}
 }
 
-func createPosition(strPieces map[string]Piece, append bool) *Game {
-	g := NewGame()
+func emulatePosition(strPieces map[string]Piece, append bool) *GameState {
+	g := NewGameState()
 	pieces := make(map[Square]Piece)
 	for sqStr, piece := range strPieces {
 		pieces[sq(sqStr)] = piece
@@ -82,9 +85,13 @@ func createPosition(strPieces map[string]Piece, append bool) *Game {
 	}
 	board := &Board{pieces: pieces}
 	if append {
-		return g.appendingPosition(board)
+		return &GameState{board, g.numMoves + 1, g.castlingSquares, g.enpassantTarget}
 	} else {
 		g.board = board
 		return g
 	}
+}
+
+func gameWithPosition(g *GameState, b *Board) *GameState {
+	return &GameState{b, g.numMoves, g.castlingSquares, g.enpassantTarget}
 }

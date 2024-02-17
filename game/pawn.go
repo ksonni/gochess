@@ -1,6 +1,9 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 var (
 	pawnDelta           = make(map[PieceColor]Square)
@@ -43,7 +46,7 @@ func (p Pawn) String() string {
 func (p Pawn) Type() PieceType {
 	return PieceType_Pawn
 }
-func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
+func (p Pawn) ComputeAttackedSquares(from Square, g *GameState) map[Square]bool {
 	attacked := p.computeNormalAttackedSquares(from, g)
 	for sq, val := range p.computeEnPassantAttackedSquares(from, g) {
 		attacked[sq] = val
@@ -51,7 +54,7 @@ func (p Pawn) ComputeAttackedSquares(from Square, g *Game) map[Square]bool {
 	return attacked
 }
 
-func (p Pawn) WithLocalMove(move Move, g *Game) (*Game, error) {
+func (p Pawn) WithLocalMove(move Move, g *GameState) (*GameState, error) {
 	from, to := move.From, move.To
 	movement, ok := p.computePawnMovements(from, g)[to]
 	if !ok {
@@ -60,7 +63,7 @@ func (p Pawn) WithLocalMove(move Move, g *Game) (*Game, error) {
 	return p.planPawnMovement(move, movement, g)
 }
 
-func (p Pawn) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+func (p Pawn) PlanPossibleMovesLocally(from Square, g *GameState) []MovePlan {
 	var plans []MovePlan
 	for to, movement := range p.computePawnMovements(from, g) {
 		var moves []Move
@@ -87,7 +90,7 @@ type pawnMovement struct {
 	mustPromote      bool
 }
 
-func (p Pawn) planPawnMovement(move Move, movement *pawnMovement, g *Game) (*Game, error) {
+func (p Pawn) planPawnMovement(move Move, movement *pawnMovement, g *GameState) (*GameState, error) {
 	from, to, promotion := move.From, move.To, move.Promotion
 	board := g.Board().Clone()
 	board.jumpPiece(from, to)
@@ -101,10 +104,15 @@ func (p Pawn) planPawnMovement(move Move, movement *pawnMovement, g *Game) (*Gam
 	if movement.secondaryCapture != nil {
 		board.clearSquare(*movement.secondaryCapture)
 	}
-	return g.appendingPosition(board), nil
+
+	// Track possible en-passant
+	enpassantTarget := int(math.Abs(float64(move.From.Rank-move.To.Rank))) == 2
+	params := AppendPosParams{enpassantTarget: enpassantTarget}
+
+	return g.appendingPosition(board, move, params), nil
 }
 
-func (p Pawn) computePawnMovements(from Square, g *Game) map[Square]*pawnMovement {
+func (p Pawn) computePawnMovements(from Square, g *GameState) map[Square]*pawnMovement {
 	out := make(map[Square]*pawnMovement)
 	for sq, movement := range p.computeNonAttackedMovements(from, g) {
 		out[sq] = movement
@@ -120,7 +128,7 @@ func (p Pawn) computePawnMovements(from Square, g *Game) map[Square]*pawnMovemen
 
 // Non attacking movement
 
-func (p Pawn) computeNonAttackedMovableSquares(from Square, g *Game) map[Square]bool {
+func (p Pawn) computeNonAttackedMovableSquares(from Square, g *GameState) map[Square]bool {
 	movable := make(map[Square]bool)
 	delta := pawnDelta[p.Color()]
 	board := g.Board()
@@ -136,7 +144,7 @@ func (p Pawn) computeNonAttackedMovableSquares(from Square, g *Game) map[Square]
 	return movable
 }
 
-func (p Pawn) computeNonAttackedMovements(from Square, g *Game) map[Square]*pawnMovement {
+func (p Pawn) computeNonAttackedMovements(from Square, g *GameState) map[Square]*pawnMovement {
 	out := make(map[Square]*pawnMovement)
 	nonAttacked := p.computeNonAttackedMovableSquares(from, g)
 	for to := range nonAttacked {
@@ -147,7 +155,7 @@ func (p Pawn) computeNonAttackedMovements(from Square, g *Game) map[Square]*pawn
 
 // Normal attacking movement
 
-func (p Pawn) attacksNormal(from Square, to Square, g *Game) bool {
+func (p Pawn) attacksNormal(from Square, to Square, g *GameState) bool {
 	board := g.Board()
 	if !board.SquareInRange(to) {
 		return false
@@ -161,7 +169,7 @@ func (p Pawn) attacksNormal(from Square, to Square, g *Game) bool {
 	return !exists || piece.Color() != p.Color()
 }
 
-func (p Pawn) computeNormalAttackedSquares(from Square, g *Game) map[Square]bool {
+func (p Pawn) computeNormalAttackedSquares(from Square, g *GameState) map[Square]bool {
 	attackDeltas := pawnAttackDeltas[p.Color()]
 	attacked := make(map[Square]bool)
 	for delta := range attackDeltas {
@@ -173,7 +181,7 @@ func (p Pawn) computeNormalAttackedSquares(from Square, g *Game) map[Square]bool
 	return attacked
 }
 
-func (p Pawn) computeNormalAttackedMovements(from Square, g *Game) map[Square]*pawnMovement {
+func (p Pawn) computeNormalAttackedMovements(from Square, g *GameState) map[Square]*pawnMovement {
 	out := make(map[Square]*pawnMovement)
 	attacked := p.computeNormalAttackedSquares(from, g)
 	for to := range attacked {
@@ -186,7 +194,7 @@ func (p Pawn) computeNormalAttackedMovements(from Square, g *Game) map[Square]*p
 
 // En-Passant movement
 
-func (p Pawn) attacksEnPassant(from Square, to Square, g *Game) bool {
+func (p Pawn) attacksEnPassant(from Square, to Square, g *GameState) bool {
 	board := g.Board()
 	if !board.SquareInRange(to) {
 		return false
@@ -205,10 +213,10 @@ func (p Pawn) attacksEnPassant(from Square, to Square, g *Game) bool {
 		return false
 	}
 	// Enemy pawn must have moved 2 squares in the previous move
-	return g.enpessantTarget != nil && *g.enpessantTarget == to
+	return g.enpassantTarget != nil && *g.enpassantTarget == to
 }
 
-func (p Pawn) computeEnPassantAttackedSquares(from Square, g *Game) map[Square]bool {
+func (p Pawn) computeEnPassantAttackedSquares(from Square, g *GameState) map[Square]bool {
 	attacked := make(map[Square]bool)
 	for delta := range pawnEnPassantDeltas {
 		to := from.Adding(delta)
@@ -219,7 +227,7 @@ func (p Pawn) computeEnPassantAttackedSquares(from Square, g *Game) map[Square]b
 	return attacked
 }
 
-func (p Pawn) computeEnPassantAttackedMovements(from Square, g *Game) map[Square]*pawnMovement {
+func (p Pawn) computeEnPassantAttackedMovements(from Square, g *GameState) map[Square]*pawnMovement {
 	out := make(map[Square]*pawnMovement)
 	attacked := p.computeEnPassantAttackedSquares(from, g)
 	for attackSq := range attacked {
@@ -233,7 +241,7 @@ func (p Pawn) computeEnPassantAttackedMovements(from Square, g *Game) map[Square
 	return out
 }
 
-func (p Pawn) homeRank(g *Game) int {
+func (p Pawn) homeRank(g *GameState) int {
 	board := g.Board()
 	switch p.Color() {
 	case PieceColor_Black:
@@ -244,7 +252,7 @@ func (p Pawn) homeRank(g *Game) int {
 	return 1
 }
 
-func (p Pawn) promotionRank(g *Game) int {
+func (p Pawn) promotionRank(g *GameState) int {
 	board := g.Board()
 	switch p.Color() {
 	case PieceColor_Black:

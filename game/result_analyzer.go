@@ -24,15 +24,7 @@ type ResultData struct {
 	DrawReason *DrawReason
 }
 
-func (a *resultAnalyzer) isKingInCheck(color PieceColor, attackMap map[Square]bool, g *Game) bool {
-	square, ok := g.Board().GetKingSquare(color)
-	if !ok {
-		return false
-	}
-	return attackMap[*square]
-}
-
-func (a *resultAnalyzer) computeResult(g *Game) ResultData {
+func (a *resultAnalyzer) computeResult(g *GameState) ResultData {
 	side := g.MovingSide()
 	result := GameResult_Active
 	drawReason := DrawReason_Stalemate
@@ -56,7 +48,7 @@ func (a *resultAnalyzer) computeResult(g *Game) ResultData {
 	return out
 }
 
-func (a *resultAnalyzer) testForDraw(g *Game, color PieceColor) (*DrawReason, bool) {
+func (a *resultAnalyzer) testForDraw(g *GameState, color PieceColor) (*DrawReason, bool) {
 	drawReason := DrawReason_InusfficientMaterial
 	if a.hasInsufficientMaterial(g, color) {
 		drawReason = DrawReason_InusfficientMaterial
@@ -70,7 +62,7 @@ func (a *resultAnalyzer) testForDraw(g *Game, color PieceColor) (*DrawReason, bo
 	return &drawReason, true
 }
 
-func (a *resultAnalyzer) hasInsufficientMaterial(g *Game, color PieceColor) bool {
+func (a *resultAnalyzer) hasInsufficientMaterial(g *GameState, color PieceColor) bool {
 	counts := g.CountPieces()
 	black, white := counts[PieceColor_Black], counts[PieceColor_White]
 	nBlack, nWhite := len(black), len(white)
@@ -101,11 +93,11 @@ func (a *resultAnalyzer) hasInsufficientMaterial(g *Game, color PieceColor) bool
 }
 
 // TODO/implement
-func (a *resultAnalyzer) hasReached3FoldRepetition(g *Game, color PieceColor) bool {
+func (a *resultAnalyzer) hasReached3FoldRepetition(g *GameState, color PieceColor) bool {
 	return false
 }
 
 // TODO/implement
-func (a *resultAnalyzer) qualifiesFor50MoveRule(g *Game, color PieceColor) bool {
+func (a *resultAnalyzer) qualifiesFor50MoveRule(g *GameState, color PieceColor) bool {
 	return false
 }

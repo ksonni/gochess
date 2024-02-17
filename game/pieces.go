@@ -13,11 +13,11 @@ type Piece interface {
 
 type PieceMover interface {
 	// WithLocalMove Attempts a move without considering if it might leave the king in check.
-	WithLocalMove(move Move, g *Game) (*Game, error)
+	WithLocalMove(move Move, g *GameState) (*GameState, error)
 
-	PlanPossibleMovesLocally(from Square, g *Game) []MovePlan
+	PlanPossibleMovesLocally(from Square, g *GameState) []MovePlan
 
-	ComputeAttackedSquares(sq Square, g *Game) map[Square]bool
+	ComputeAttackedSquares(sq Square, g *GameState) map[Square]bool
 }
 
 type PieceId int
@@ -100,13 +100,13 @@ type Queen struct {
 func (q Queen) String() string {
 	return "Q"
 }
-func (q Queen) WithLocalMove(move Move, g *Game) (*Game, error) {
+func (q Queen) WithLocalMove(move Move, g *GameState) (*GameState, error) {
 	return q.deltaMover.gameWithMove(move.From, move.To, royalDeltas, 0, g)
 }
-func (q Queen) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+func (q Queen) PlanPossibleMovesLocally(from Square, g *GameState) []MovePlan {
 	return q.deltaMover.planPossibleMoves(from, royalDeltas, 0, g)
 }
-func (q Queen) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (q Queen) ComputeAttackedSquares(sq Square, g *GameState) map[Square]bool {
 	return q.deltaMover.computeAttackedSquares(sq, royalDeltas, 0, g)
 }
 func (q Queen) Type() PieceType {
@@ -125,13 +125,13 @@ type Rook struct {
 func (r Rook) String() string {
 	return "R"
 }
-func (r Rook) WithLocalMove(move Move, g *Game) (*Game, error) {
+func (r Rook) WithLocalMove(move Move, g *GameState) (*GameState, error) {
 	return r.deltaMover.gameWithMove(move.From, move.To, perpendicularDeltas, 0, g)
 }
-func (r Rook) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+func (r Rook) PlanPossibleMovesLocally(from Square, g *GameState) []MovePlan {
 	return r.deltaMover.planPossibleMoves(from, perpendicularDeltas, 0, g)
 }
-func (r Rook) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (r Rook) ComputeAttackedSquares(sq Square, g *GameState) map[Square]bool {
 	return r.deltaMover.computeAttackedSquares(sq, perpendicularDeltas, 0, g)
 }
 func (r Rook) Type() PieceType {
@@ -147,13 +147,13 @@ type Bishop struct {
 	pieceProps
 }
 
-func (b Bishop) WithLocalMove(move Move, g *Game) (*Game, error) {
+func (b Bishop) WithLocalMove(move Move, g *GameState) (*GameState, error) {
 	return b.deltaMover.gameWithMove(move.From, move.To, diagonalDeltas, 0, g)
 }
-func (b Bishop) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+func (b Bishop) PlanPossibleMovesLocally(from Square, g *GameState) []MovePlan {
 	return b.deltaMover.planPossibleMoves(from, diagonalDeltas, 0, g)
 }
-func (b Bishop) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (b Bishop) ComputeAttackedSquares(sq Square, g *GameState) map[Square]bool {
 	return b.deltaMover.computeAttackedSquares(sq, diagonalDeltas, 0, g)
 }
 func (b Bishop) Type() PieceType {
@@ -169,13 +169,13 @@ type Knight struct {
 	pieceProps
 }
 
-func (k Knight) WithLocalMove(move Move, g *Game) (*Game, error) {
+func (k Knight) WithLocalMove(move Move, g *GameState) (*GameState, error) {
 	return k.deltaMover.gameWithMove(move.From, move.To, knightDeltas, 1, g)
 }
-func (k Knight) PlanPossibleMovesLocally(from Square, g *Game) []MovePlan {
+func (k Knight) PlanPossibleMovesLocally(from Square, g *GameState) []MovePlan {
 	return k.deltaMover.planPossibleMoves(from, knightDeltas, 1, g)
 }
-func (k Knight) ComputeAttackedSquares(sq Square, g *Game) map[Square]bool {
+func (k Knight) ComputeAttackedSquares(sq Square, g *GameState) map[Square]bool {
 	return k.deltaMover.computeAttackedSquares(sq, knightDeltas, 1, g)
 }
 func (k Knight) Type() PieceType {

@@ -8,7 +8,7 @@ import (
 type deltaMover struct{}
 
 func (mover deltaMover) canMove(from Square, to Square, deltas []Square,
-	maxSteps int, game *Game) bool {
+	maxSteps int, game *GameState) bool {
 	for _, delta := range deltas {
 		if mover.canMoveWithDelta(from, to, delta, maxSteps, game) {
 			return true
@@ -17,7 +17,7 @@ func (mover deltaMover) canMove(from Square, to Square, deltas []Square,
 	return false
 }
 
-func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, maxSteps int, game *Game) bool {
+func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, maxSteps int, game *GameState) bool {
 	board := game.Board()
 	piece, exists := board.GetPiece(from)
 	if !exists {
@@ -35,16 +35,16 @@ func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, m
 }
 
 func (mover deltaMover) gameWithMove(from Square, to Square, deltas []Square,
-	maxSteps int, game *Game) (*Game, error) {
+	maxSteps int, game *GameState) (*GameState, error) {
 	b, err := mover.planMove(from, to, deltas, maxSteps, game)
 	if err != nil {
 		return nil, err
 	}
-	return game.appendingPosition(b), nil
+	return game.appendingPosition(b, Move{From: from, To: to}, AppendPosParams{}), nil
 }
 
 func (mover deltaMover) planMove(from Square, to Square, deltas []Square,
-	maxSteps int, game *Game) (*Board, error) {
+	maxSteps int, game *GameState) (*Board, error) {
 	if !mover.canMove(from, to, deltas, maxSteps, game) {
 		return nil, fmt.Errorf("board: invalid move")
 	}
@@ -53,21 +53,22 @@ func (mover deltaMover) planMove(from Square, to Square, deltas []Square,
 	return b, nil
 }
 
-func (mover deltaMover) planPossibleMoves(from Square, deltas []Square, maxSteps int, game *Game) []MovePlan {
+func (mover deltaMover) planPossibleMoves(from Square, deltas []Square, maxSteps int, game *GameState) []MovePlan {
 	attacked := mover.computeAttackedSquares(from, deltas, maxSteps, game)
 	var moves []MovePlan
 	for to := range attacked {
 		b := game.Board().Clone()
 		b.jumpPiece(from, to)
+		move := Move{From: from, To: to}
 		moves = append(moves, MovePlan{
-			Move: Move{From: from, To: to},
-			Game: game.appendingPosition(b),
+			Move: move,
+			Game: game.appendingPosition(b, move, AppendPosParams{}),
 		})
 	}
 	return moves
 }
 
-func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, game *Game) map[Square]bool {
+func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSteps int, game *GameState) map[Square]bool {
 	attacked := make(map[Square]bool)
 	for _, delta := range deltas {
 		partAttacked := mover.computeAttackedSquaresWithDelta(sq, delta, maxSteps, game)
@@ -79,7 +80,7 @@ func (mover deltaMover) computeAttackedSquares(sq Square, deltas []Square, maxSt
 }
 
 func (mover deltaMover) computeAttackedSquaresWithDelta(
-	sq Square, delta Square, maxSteps int, game *Game) map[Square]bool {
+	sq Square, delta Square, maxSteps int, game *GameState) map[Square]bool {
 	attacked := make(map[Square]bool)
 
 	board := game.Board()
