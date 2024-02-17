@@ -1,7 +1,11 @@
 package game
 
 import (
+	"crypto/sha1"
 	"fmt"
+	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 type GameState struct {
@@ -122,7 +126,6 @@ type AppendPosParams struct {
 func (g *GameState) appendingPosition(board *Board, move Move, params AppendPosParams) *GameState {
 	numMoves := g.numMoves + 1
 
-	// En-passant rights
 	var enpassantTarget *Square
 	if params.enpassantTarget {
 		enpassantTarget = &move.To
@@ -143,4 +146,42 @@ func (g *GameState) appendingPosition(board *Board, move Move, params AppendPosP
 		castlingSquares,
 		enpassantTarget,
 	}
+}
+
+func (g *GameState) repititionHashString() string {
+	h := sha1.New()
+	h.Write([]byte(g.repititionHashableString()))
+	bs := h.Sum(nil)
+	sh := string(fmt.Sprintf("%x", bs))
+	return sh
+}
+
+func (g *GameState) repititionHashableString() string {
+	hashes := []string{}
+
+	// Ensure all the pieces and their colors are the same
+	for square, piece := range g.board.pieces {
+		hash := fmt.Sprintf("%s=%d_%d", square.String(), piece.Color(), piece.Type())
+		hashes = append(hashes, hash)
+	}
+	slices.Sort(hashes)
+
+	// Ensure castling rights are unchanged
+	castlingHashes := []string{}
+	for square, status := range g.castlingSquares {
+		hash := fmt.Sprintf("%s=%d", square.String(), status)
+		castlingHashes = append(castlingHashes, hash)
+	}
+	slices.Sort(castlingHashes)
+	hashes = append(hashes, castlingHashes...)
+
+	// Must be the move of the same player
+	hashes = append(hashes, fmt.Sprint(g.numMoves%2))
+
+	// Ensure en-passant rights are unchanged
+	if g.enpassantTarget != nil {
+		hashes = append(hashes, g.enpassantTarget.String())
+	}
+
+	return strings.Join(hashes, ",")
 }

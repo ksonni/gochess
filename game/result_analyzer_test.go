@@ -153,9 +153,9 @@ func TestResults(t *testing.T) {
 
 	for title, pos := range tests {
 		g := Game{
-			GameState: *emulatePosition(pos.pos, true),
+			state: emulatePosition(pos.pos, true),
 		}
-		result := g.computeResult(&g.GameState)
+		result := g.computeResult(g.state)
 		if result.Result != pos.result.Result {
 			t.Errorf("%s: got game result %v, want %v",
 				title, result.Result, GameResult_Checkmate)

@@ -1,7 +1,8 @@
 package game
 
 type Game struct {
-	GameState
+	state      *GameState
+	gameHashes map[string]int
 	resultAnalyzer
 }
 
@@ -18,6 +19,22 @@ type MovePlan struct {
 
 func NewGame() *Game {
 	return &Game{
-		GameState: *NewGameState(),
+		state:      NewGameState(),
+		gameHashes: make(map[string]int),
 	}
+}
+
+func (g *Game) Move(move Move) error {
+	state, err := g.state.WithMove(move)
+	if err != nil {
+		return err
+	}
+	g.state = state
+	hash := state.repititionHashString()
+	g.gameHashes[hash] = g.gameHashes[hash] + 1
+	return nil
+}
+
+func (g *Game) ComputeResult() ResultData {
+	return g.resultAnalyzer.computeResult(g.state)
 }
