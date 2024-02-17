@@ -3,8 +3,10 @@ package game
 import "fmt"
 
 type Game struct {
-	position *Position
-	numMoves int
+	position        *Position
+	numMoves        int
+	castlingSquares map[Square]SquareMovementStatus
+
 	resultAnalyzer
 }
 
@@ -48,6 +50,13 @@ func (g *Game) WithMove(move Move) (*Game, error) {
 	}
 	if nextPos.IsSideInCheck(piece.Color()) {
 		return nil, fmt.Errorf("game: move failed: violates king integrity")
+	}
+
+	if _, tracked := g.castlingSquares[move.From]; tracked {
+		g.castlingSquares[move.From] = SquareMovementStatus_Moved
+	}
+	if _, tracked := g.castlingSquares[move.To]; tracked {
+		g.castlingSquares[move.To] = SquareMovementStatus_Moved
 	}
 
 	return nextPos, nil
@@ -136,14 +145,16 @@ func (g *Game) CountPieces() map[PieceColor]map[PieceType]int {
 
 func (g *Game) appendingPosition(board *Board) *Game {
 	return &Game{
-		position: g.position.Appending(board),
-		numMoves: g.numMoves + 1,
+		position:        g.position.Appending(board),
+		numMoves:        g.numMoves + 1,
+		castlingSquares: g.castlingSquares,
 	}
 }
 
 func (g *Game) withPosition(board *Board) *Game {
 	return &Game{
-		position: g.position.Setting(board),
-		numMoves: g.numMoves + 1,
+		position:        g.position.Setting(board),
+		numMoves:        g.numMoves + 1,
+		castlingSquares: g.castlingSquares,
 	}
 }

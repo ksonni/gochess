@@ -17,6 +17,15 @@ const (
 	SquareColor_White
 )
 
+type SquareMovementStatus int
+
+const (
+	SquareMovementStatus_Unmoved SquareMovementStatus = iota
+
+	// Indicates a move involving this square has occured
+	SquareMovementStatus_Moved
+)
+
 func (square Square) String() string {
 	return fmt.Sprintf("%c%d", 'a'+square.File, square.Rank+1)
 }

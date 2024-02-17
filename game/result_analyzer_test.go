@@ -159,7 +159,10 @@ func TestResults(t *testing.T) {
 				title, result.Result, GameResult_Checkmate)
 		}
 		if pos.result.DrawReason != nil {
-			if *result.DrawReason != *pos.result.DrawReason {
+			if result.DrawReason == nil {
+				t.Errorf("%s: got draw reason nil, want %v",
+					title, *pos.result.DrawReason)
+			} else if *result.DrawReason != *pos.result.DrawReason {
 				t.Errorf("%s: got draw reason %v, want %v",
 					title, *result.DrawReason, *pos.result.DrawReason)
 			}

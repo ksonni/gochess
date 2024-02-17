@@ -6,24 +6,25 @@ type gameMaker struct{}
 func NewGame() *Game {
 	game := new(Game)
 	game.position = &Position{board: NewBoard()}
+	game.castlingSquares = make(map[Square]SquareMovementStatus)
 	i := gameMaker{}
-	i.initializePieces(game.Board())
+	i.initializePieces(game.Board(), game.castlingSquares)
 	return game
 }
 
-func (i *gameMaker) initializePieces(board *Board) {
+func (i *gameMaker) initializePieces(board *Board, castlingSquares map[Square]SquareMovementStatus) {
 	whitePiecesRank := 0
 	whitePawnsRank := whitePiecesRank + 1
 	i.populatePawns(board, PieceColor_White, whitePawnsRank)
-	i.populatePieces(board, PieceColor_White, whitePiecesRank)
+	i.populatePieces(board, PieceColor_White, whitePiecesRank, castlingSquares)
 
 	blackPawnsRank := board.NumRanks() - 1 - whitePawnsRank
 	blackPiecesRank := board.NumRanks() - 1 - whitePiecesRank
 	i.populatePawns(board, PieceColor_Black, blackPawnsRank)
-	i.populatePieces(board, PieceColor_Black, blackPiecesRank)
+	i.populatePieces(board, PieceColor_Black, blackPiecesRank, castlingSquares)
 }
 
-func (i *gameMaker) populatePieces(board *Board, color PieceColor, rank int) {
+func (i *gameMaker) populatePieces(board *Board, color PieceColor, rank int, castlingSquares map[Square]SquareMovementStatus) {
 	pieces := []Piece{
 		NewRook(color),
 		NewKnight(color),
@@ -35,7 +36,12 @@ func (i *gameMaker) populatePieces(board *Board, color PieceColor, rank int) {
 		NewRook(color),
 	}
 	for file, piece := range pieces {
-		board.setPiece(piece, Square{File: file, Rank: rank})
+		t := piece.Type()
+		sq := Square{File: file, Rank: rank}
+		if t == PieceType_Rook || t == PieceType_King {
+			castlingSquares[sq] = SquareMovementStatus_Unmoved
+		}
+		board.setPiece(piece, sq)
 	}
 }
 
