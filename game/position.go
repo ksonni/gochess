@@ -52,12 +52,3 @@ func (p *Position) PieceAtPreviousMove(square Square) (Piece, bool) {
 	}
 	return board.GetPiece(square)
 }
-
-func (p *Position) SquareHasEverChanged(sq Square) bool {
-	for pos := p; pos != nil && pos.previous != nil; pos = pos.previous {
-		if !pos.board.HasSamePiece(pos.previous.board, sq) {
-			return true
-		}
-	}
-	return false
-}

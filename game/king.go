@@ -60,14 +60,12 @@ func (k King) planPossibleCastlingMoves(from Square, to *Square, g *Game) []Move
 	// Computed attack map
 	attackMap := g.ComputeSquaresAttackedBySide(k.Color().Opponent())
 
-	position := g.Position()
-
 	// King must not be in check
 	if attackMap[from] {
 		return moves
 	}
 	// Castling - king must never have moved
-	if position.SquareHasEverChanged(from) {
+	if g.castlingSquares[from] == SquareMovementStatus_Moved {
 		return moves
 	}
 
@@ -79,7 +77,7 @@ func (k King) planPossibleCastlingMoves(from Square, to *Square, g *Game) []Move
 		}
 		rookSquare := Square{File: config.rookStartFile, Rank: from.Rank}
 		// Rook must never have moved
-		if position.SquareHasEverChanged(rookSquare) {
+		if g.castlingSquares[rookSquare] == SquareMovementStatus_Moved {
 			continue
 		}
 		// Path must not be under attack

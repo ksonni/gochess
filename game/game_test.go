@@ -1,6 +1,8 @@
 package game
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestAttackedSquaresBySide(t *testing.T) {
 	title := "Attacked squares"
@@ -71,6 +73,12 @@ func createPosition(strPieces map[string]Piece, append bool) *Game {
 	pieces := make(map[Square]Piece)
 	for sqStr, piece := range strPieces {
 		pieces[sq(sqStr)] = piece
+		// Checking if has moved from original square
+		if g.Board().pieces[sq(sqStr)] != pieces[sq(sqStr)] {
+			if _, tracked := g.castlingSquares[sq(sqStr)]; tracked {
+				g.castlingSquares[sq(sqStr)] = SquareMovementStatus_Moved
+			}
+		}
 	}
 	board := &Board{pieces: pieces}
 	if append {
