@@ -205,11 +205,7 @@ func (p Pawn) attacksEnPassant(from Square, to Square, g *Game) bool {
 		return false
 	}
 	// Enemy pawn must have moved 2 squares in the previous move
-	homeSquare := to.Subtracting(pawnHomeDelta[target.Color()])
-	if previousPiece, exists := g.Position().PieceAtPreviousMove(homeSquare); exists {
-		return previousPiece.Id() == target.Id()
-	}
-	return false
+	return g.enpessantTarget != nil && *g.enpessantTarget == to
 }
 
 func (p Pawn) computeEnPassantAttackedSquares(from Square, g *Game) map[Square]bool {

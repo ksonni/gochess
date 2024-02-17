@@ -1,11 +1,15 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 type Game struct {
 	position        *Position
 	numMoves        int
 	castlingSquares map[Square]SquareMovementStatus
+	enpessantTarget *Square
 
 	resultAnalyzer
 }
@@ -52,11 +56,20 @@ func (g *Game) WithMove(move Move) (*Game, error) {
 		return nil, fmt.Errorf("game: move failed: violates king integrity")
 	}
 
+	// For tracking castling rights
 	if _, tracked := g.castlingSquares[move.From]; tracked {
 		g.castlingSquares[move.From] = SquareMovementStatus_Moved
 	}
 	if _, tracked := g.castlingSquares[move.To]; tracked {
 		g.castlingSquares[move.To] = SquareMovementStatus_Moved
+	}
+
+	// For tracking en-passant rights
+	moveDist := int(math.Abs(float64(move.From.Rank - move.To.Rank)))
+	if _, isPawn := piece.(Pawn); isPawn && moveDist == 2 {
+		g.enpessantTarget = &move.To
+	} else {
+		g.enpessantTarget = nil
 	}
 
 	return nextPos, nil
@@ -148,6 +161,7 @@ func (g *Game) appendingPosition(board *Board) *Game {
 		position:        g.position.Appending(board),
 		numMoves:        g.numMoves + 1,
 		castlingSquares: g.castlingSquares,
+		enpessantTarget: g.enpessantTarget,
 	}
 }
 
@@ -156,5 +170,6 @@ func (g *Game) withPosition(board *Board) *Game {
 		position:        g.position.Setting(board),
 		numMoves:        g.numMoves + 1,
 		castlingSquares: g.castlingSquares,
+		enpessantTarget: g.enpessantTarget,
 	}
 }
