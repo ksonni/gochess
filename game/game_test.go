@@ -84,7 +84,7 @@ func createPosition(strPieces map[string]Piece, append bool) *Game {
 	if append {
 		return g.appendingPosition(board)
 	} else {
-		g.position.board = board
+		g.board = board
 		return g
 	}
 }

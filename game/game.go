@@ -6,7 +6,7 @@ import (
 )
 
 type Game struct {
-	position        *Position
+	board           *Board
 	numMoves        int
 	castlingSquares map[Square]SquareMovementStatus
 	enpessantTarget *Square
@@ -26,7 +26,7 @@ type MovePlan struct {
 }
 
 func (g *Game) Board() *Board {
-	return g.position.board
+	return g.board
 }
 
 func (g *Game) Move(move Move) error {
@@ -35,7 +35,7 @@ func (g *Game) Move(move Move) error {
 		return err
 	}
 	g.numMoves = result.numMoves
-	g.position = result.position
+	g.board = result.board
 	return nil
 }
 
@@ -138,11 +138,6 @@ func (g *Game) MovingSide() PieceColor {
 	return PieceColor(g.NumMoves() % 2)
 }
 
-func (g *Game) Position() *Position {
-	p := g.position.Clone() // Defensive copy
-	return &p
-}
-
 func (g *Game) CountPieces() map[PieceColor]map[PieceType]int {
 	out := map[PieceColor]map[PieceType]int{
 		PieceColor_White: {},
@@ -158,18 +153,20 @@ func (g *Game) CountPieces() map[PieceColor]map[PieceType]int {
 
 func (g *Game) appendingPosition(board *Board) *Game {
 	return &Game{
-		position:        g.position.Appending(board),
-		numMoves:        g.numMoves + 1,
-		castlingSquares: g.castlingSquares,
-		enpessantTarget: g.enpessantTarget,
+		board,
+		g.numMoves + 1,
+		g.castlingSquares,
+		g.enpessantTarget,
+		g.resultAnalyzer,
 	}
 }
 
 func (g *Game) withPosition(board *Board) *Game {
 	return &Game{
-		position:        g.position.Setting(board),
-		numMoves:        g.numMoves + 1,
-		castlingSquares: g.castlingSquares,
-		enpessantTarget: g.enpessantTarget,
+		board,
+		g.numMoves,
+		g.castlingSquares,
+		g.enpessantTarget,
+		g.resultAnalyzer,
 	}
 }
