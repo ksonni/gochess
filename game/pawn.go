@@ -105,10 +105,9 @@ func (p Pawn) planPawnMovement(move Move, movement *pawnMovement, g *GameState) 
 		board.clearSquare(*movement.secondaryCapture)
 	}
 
-	// Track possible en-passant
-	enpassantTarget := int(math.Abs(float64(move.From.Rank-move.To.Rank))) == 2
-	params := AppendPosParams{enpassantTarget: enpassantTarget}
-
+	params := AppendPosParams{
+		enpassantTarget: p.isAttackedEnPassant(move, g),
+	}
 	return g.appendingPosition(board, move, params), nil
 }
 
@@ -214,6 +213,21 @@ func (p Pawn) attacksEnPassant(from Square, to Square, g *GameState) bool {
 	}
 	// Enemy pawn must have moved 2 squares in the previous move
 	return g.enpassantTarget != nil && *g.enpassantTarget == to
+}
+
+func (p Pawn) isAttackedEnPassant(previousMove Move, g *GameState) bool {
+	if int(math.Abs(float64(previousMove.From.Rank-previousMove.To.Rank))) != 2 {
+		return false
+	}
+	for delta := range pawnEnPassantDeltas {
+		square := previousMove.To.Adding(delta)
+		if piece, ok := g.board.GetPiece(square); ok && piece.Color() != p.Color() {
+			if _, isPawn := piece.(Pawn); isPawn {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (p Pawn) computeEnPassantAttackedSquares(from Square, g *GameState) map[Square]bool {

@@ -38,7 +38,7 @@ func TestStateHashing(t *testing.T) {
 	g.Move(Move{From: sq("e2"), To: sq("e4")})
 	hash := g.state.repititionHashableString()
 	want := "a1=0_2,a2=0_5,a7=1_5,a8=1_2,b1=0_4,b2=0_5,b7=1_5,b8=1_4,c1=0_3,c2=0_5,c7=1_5,c8=1_3,d1=0_1,d2=0_5,d7=1_5,d8=1_1,e1=0_0,e4=0_5,e7=1_5," +
-		"e8=1_0,f1=0_3,f2=0_5,f7=1_5,f8=1_3,g1=0_4,g2=0_5,g7=1_5,g8=1_4,h1=0_2,h2=0_5,h7=1_5,h8=1_2,a1=0,a8=0,e1=0,e8=0,h1=0,h8=0,1,e4"
+		"e8=1_0,f1=0_3,f2=0_5,f7=1_5,f8=1_3,g1=0_4,g2=0_5,g7=1_5,g8=1_4,h1=0_2,h2=0_5,h7=1_5,h8=1_2,a1=0,a8=0,e1=0,e8=0,h1=0,h8=0,1"
 	if hash != want {
 		t.Errorf("Got hash: %s want: %s", hash, want)
 	}
