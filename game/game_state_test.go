@@ -96,7 +96,7 @@ func emulatePosition(strPieces map[string]Piece, append bool) *GameState {
 	}
 	board := &Board{pieces: pieces}
 	if append {
-		return &GameState{board, g.numMoves + 1, g.castlingSquares, g.enpassantTarget}
+		return &GameState{board, g.numMoves + 1, g.castlingSquares, g.enpassantTarget, 0, 0}
 	} else {
 		g.board = board
 		return g
@@ -104,5 +104,5 @@ func emulatePosition(strPieces map[string]Piece, append bool) *GameState {
 }
 
 func gameWithPosition(g *GameState, b *Board) *GameState {
-	return &GameState{b, g.numMoves, g.castlingSquares, g.enpassantTarget}
+	return &GameState{b, g.numMoves, g.castlingSquares, g.enpassantTarget, 0, 0}
 }

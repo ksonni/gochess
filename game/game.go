@@ -38,6 +38,13 @@ type ResultData struct {
 	DrawReason *DrawReason
 }
 
+const (
+	drawRepetitionMoveCount = 3
+
+	// For draw purposes a 'move' consists of a player completing a turn followed by the opponent completing a turn
+	drawMoveCount = 50 * 2
+)
+
 func NewGame() *Game {
 	return &Game{
 		state:            NewGameState(),
@@ -128,10 +135,10 @@ func (game *Game) hasInsufficientMaterial(g *GameState, color PieceColor) bool {
 }
 
 func (game *Game) hasReached3FoldRepetition(g *Game, color PieceColor) bool {
-	return g.repititionHashes[g.state.repititionHashString()] >= 3
+	return g.repititionHashes[g.state.repititionHashString()] >= drawRepetitionMoveCount
 }
 
-// TODO/implement
 func (game *Game) qualifiesFor50MoveRule(g *GameState, color PieceColor) bool {
-	return false
+	return g.lastCaptureMove > 0 && g.numMoves-g.lastCaptureMove >= drawMoveCount ||
+		g.lastPawnMove > 0 && g.numMoves-g.lastPawnMove >= drawMoveCount
 }
