@@ -150,7 +150,7 @@ func (g *GameState) appendingPosition(board *Board, move Move, params AppendPosP
 
 	lastCaptureMove := g.lastCaptureMove
 	if _, exists := g.board.GetPiece(move.To); exists ||
-		len(g.board.pieces) < len(board.pieces) {
+		len(board.pieces) < len(g.board.pieces) {
 		lastCaptureMove = numMoves
 	}
 

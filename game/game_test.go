@@ -322,3 +322,105 @@ func Test3FoldRepetition(t *testing.T) {
 		assertDrawAtEnd(title, params)
 	}
 }
+
+func TestTracksCapturesAndPawnMoves(t *testing.T) {
+	type CaptureParamsMove struct {
+		move         testMove
+		lastPawnMove int
+		lastCapture  int
+	}
+
+	type CapturesParams struct {
+		moves []CaptureParamsMove
+	}
+
+	tests := map[string]CapturesParams{
+		"Tracks normal pawn capture & movement": {
+			moves: []CaptureParamsMove{
+				{
+					move:         testMove{from: "e2", to: "e4"},
+					lastPawnMove: 1,
+					lastCapture:  0,
+				},
+				{
+					move:         testMove{from: "d7", to: "d5"},
+					lastPawnMove: 2,
+					lastCapture:  0,
+				},
+				{
+					move:         testMove{from: "e4", to: "d5"},
+					lastPawnMove: 3,
+					lastCapture:  3,
+				},
+			},
+		},
+		"Tracks en-passant pawn capture & movement": {
+			moves: []CaptureParamsMove{
+				{
+					move:         testMove{from: "e2", to: "e4"},
+					lastPawnMove: 1,
+					lastCapture:  0,
+				},
+				{
+					move:         testMove{from: "g8", to: "h6"},
+					lastPawnMove: 1,
+					lastCapture:  0,
+				},
+				{
+					move:         testMove{from: "e4", to: "e5"},
+					lastPawnMove: 3,
+					lastCapture:  0,
+				},
+				{
+					move:         testMove{from: "d7", to: "d5"},
+					lastPawnMove: 4,
+					lastCapture:  0,
+				},
+				{
+					move:         testMove{from: "e5", to: "d6"},
+					lastPawnMove: 5,
+					lastCapture:  5,
+				},
+			},
+		},
+		"Tracks capture by piece": {
+			moves: []CaptureParamsMove{
+				{
+					move: testMove{from: "b1", to: "c3"},
+				},
+				{
+					move:         testMove{from: "d7", to: "d5"},
+					lastPawnMove: 2,
+				},
+				{
+					move:         testMove{from: "c3", to: "d5"},
+					lastPawnMove: 2,
+					lastCapture:  3,
+				},
+			},
+		},
+	}
+
+	assertTracking := func(title string, params CapturesParams) {
+		g := NewGame()
+		for i, move := range params.moves {
+			err := g.Move(move.move.Move())
+			if err != nil {
+				t.Errorf("%s: move %d: failed before testing pawn/capture tracking, %v", title, i, err)
+				break
+			}
+			if move.lastCapture != g.state.lastCaptureMove {
+				t.Errorf("%s: move %d: got lastCaptureMove: %d, want: %d", title, i,
+					g.state.lastCaptureMove, move.lastCapture)
+			}
+			if move.lastPawnMove != g.state.lastPawnMove {
+				t.Errorf("%s: move %d: got lastPawnMove: %d, want: %d", title, i,
+					g.state.lastPawnMove, move.lastPawnMove)
+			}
+		}
+	}
+
+	for title, params := range tests {
+		assertTracking(title, params)
+	}
+}
