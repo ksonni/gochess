@@ -139,6 +139,6 @@ func (game *Game) hasReached3FoldRepetition(g *Game, color PieceColor) bool {
 }
 
 func (game *Game) qualifiesFor50MoveRule(g *GameState, color PieceColor) bool {
-	return g.lastCaptureMove > 0 && g.numMoves-g.lastCaptureMove >= drawMoveCount ||
-		g.lastPawnMove > 0 && g.numMoves-g.lastPawnMove >= drawMoveCount
+	return g.numMoves-g.lastCaptureMove >= drawMoveCount &&
+		g.numMoves-g.lastPawnMove >= drawMoveCount
 }
