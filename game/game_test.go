@@ -152,10 +152,10 @@ func TestResults(t *testing.T) {
 	}
 
 	for title, pos := range tests {
-		g := Game{
+		g := &Game{
 			state: emulatePosition(pos.pos, true),
 		}
-		result := g.computeResult(g.state)
+		result := g.ComputeResult()
 		if result.Result != pos.result.Result {
 			t.Errorf("%s: got game result %v, want %v",
 				title, result.Result, GameResult_Checkmate)
@@ -171,5 +171,154 @@ func TestResults(t *testing.T) {
 		} else if result.DrawReason != nil {
 			t.Errorf("%s: draw reason got: %v, want nil", title, *result.DrawReason)
 		}
+	}
+}
+
+func Test3FoldRepetition(t *testing.T) {
+	type ThreeFoldParams struct {
+		moves []testMove
+		draw  bool
+	}
+
+	tests := map[string]ThreeFoldParams{
+		"Repeated knight moves": {
+			moves: []testMove{
+				{from: "b1", to: "c3"},
+				{from: "g8", to: "f6"},
+				{from: "c3", to: "b1"},
+				{from: "f6", to: "g8"},
+
+				{from: "b1", to: "c3"},
+				{from: "g8", to: "f6"},
+				{from: "c3", to: "b1"},
+				{from: "f6", to: "g8"},
+
+				{from: "b1", to: "c3"},
+			},
+			draw: true,
+		},
+
+		"Must be move of the same player when repetition occurs": {
+			moves: []testMove{
+				{from: "d2", to: "d4"},
+				{from: "d7", to: "d5"}, // Repetition 1 = white's turn next
+				{from: "c1", to: "h6"},
+				{from: "c8", to: "h3"},
+
+				{from: "h6", to: "c1"},
+				{from: "h3", to: "c8"}, // Repetition 2 = white's turn next
+				{from: "c1", to: "h6"},
+				{from: "c8", to: "h3"},
+
+				{from: "h6", to: "d2"},
+				{from: "h3", to: "d7"},
+				{from: "d2", to: "e3"},
+				{from: "d7", to: "c8"},
+
+				{from: "e3", to: "c1"}, // Position appears again, but it's black's turn
+				{from: "c8", to: "d7"},
+				{from: "c1", to: "f4"},
+				{from: "d7", to: "e6"},
+
+				{from: "f4", to: "e3"},
+				{from: "e6", to: "d7"},
+				{from: "e3", to: "c1"},
+				{from: "d7", to: "c8"}, // Repetition 3 = white's trun next = draw
+			},
+			draw: true,
+		},
+
+		"Must have same en-passant rights when repetition occurs": {
+			moves: []testMove{
+				{from: "e2", to: "e4"},
+				{from: "g8", to: "f6"},
+				{from: "e4", to: "e5"},
+				{from: "b8", to: "c6"},
+
+				{from: "b1", to: "c3"},
+				{from: "d7", to: "d5"}, // Apparant repetition 1 - white's turn and has en-passant rights
+				{from: "d1", to: "g4"}, // Actual repetition 1 and black's turn
+				{from: "c8", to: "d7"},
+
+				{from: "g4", to: "d1"},
+				{from: "d7", to: "c8"}, // Apparant repetition 2 - white's turn but no en-passant rights
+				{from: "d1", to: "g4"}, // Actual repetition 2 and black's turn
+				{from: "c8", to: "d7"},
+
+				{from: "g4", to: "d1"},
+				{from: "d7", to: "c8"}, // Apparant repetition 3 - white's turn but no en-passant rights
+				{from: "d1", to: "g4"}, // Actual repetition 3 and black's turn = draw
+			},
+			draw: true,
+		},
+
+		"Must have same castling rights status when repetition occurs - rook variation": {
+			moves: []testMove{
+				{from: "a2", to: "a3"},
+				{from: "a7", to: "a6"}, // Apparant repetition 1 - white's turn and has king-side castling rights
+
+				{from: "a1", to: "a2"}, // Actual repetition 1 and black's turn
+				{from: "g8", to: "f6"},
+				{from: "a2", to: "a1"},
+				{from: "f6", to: "g8"}, // Apparant repetition 2 - white's turn but no castling rights on this king-side
+
+				{from: "a1", to: "a2"}, // Actual repetition 2 and black's turn
+				{from: "g8", to: "f6"},
+				{from: "a2", to: "a1"},
+				{from: "f6", to: "g8"}, // Apparant repetition 3 - white's turn but no castling rights on this king-side
+
+				{from: "a1", to: "a2"}, // Actual repetition 2 and black's turn = draw
+			},
+			draw: true,
+		},
+
+		"Must have same castling rights status when repetition occurs - king variation": {
+			moves: []testMove{
+				{from: "e2", to: "e3"},
+				{from: "e7", to: "e6"}, // Apparant repetition 1 - white's turn and has castling rights
+
+				{from: "e1", to: "e2"}, // Actual repetition 1 and black's turn
+				{from: "d8", to: "e7"},
+				{from: "e2", to: "e1"},
+				{from: "e7", to: "d8"}, // Apparant repetition 2 - white's turn but no castling rights on this king-side
+
+				{from: "e1", to: "e2"}, // Actual repetition 2 and black's turn
+				{from: "d8", to: "e7"},
+				{from: "e2", to: "e1"},
+				{from: "e7", to: "d8"}, // Apparant repetition 3 - white's turn but no castling rights on this king-side
+
+				{from: "e1", to: "e2"}, // Actual repetition 3 and black's turn = draw
+			},
+			draw: true,
+		},
+	}
+
+	assertDrawAtEnd := func(title string, params ThreeFoldParams) {
+		g := NewGame()
+		moves, mustDraw := params.moves, params.draw
+		for i, move := range moves {
+			err := g.Move(move.Move())
+			if err != nil {
+				t.Errorf("%s: move %d: failed before testing 3-fold repetition, %v", title, i, err)
+				break
+			}
+			result := g.ComputeResult()
+			if i == len(moves)-1 && mustDraw {
+				if result.Result != GameResult_Draw {
+					t.Errorf("%s: move %d: got game result %d but want %d", title, i, result.Result, GameResult_Draw)
+				}
+				if result.DrawReason == nil {
+					t.Errorf("%s: move %d: got no draw reason, but want %d", title, i, GameResult_Draw)
+				} else if *result.DrawReason != DrawReason_3FoldRepetition {
+					t.Errorf("%s: move %d: got draw reason %d but want %d", title, i, result.DrawReason, DrawReason_3FoldRepetition)
+				}
+			} else if result.Result != GameResult_Active {
+				t.Errorf("%s: move %d: got game result %d when in progress but want %d", title, i, result.Result, GameResult_Active)
+			}
+		}
+	}
+
+	for title, params := range tests {
+		assertDrawAtEnd(title, params)
 	}
 }
