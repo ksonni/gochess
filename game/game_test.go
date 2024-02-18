@@ -153,7 +153,7 @@ func TestResults(t *testing.T) {
 
 	for title, pos := range tests {
 		g := &Game{
-			state: emulatePosition(pos.pos, true),
+			state: simulatePosition(pos.pos, true),
 		}
 		result := g.ComputeResult()
 		if result.Result != pos.result.Result {
@@ -422,5 +422,60 @@ func TestTracksCapturesAndPawnMoves(t *testing.T) {
 
 	for title, params := range tests {
 		assertTracking(title, params)
+	}
+}
+
+func Test50MoveDrawCondition(t *testing.T) {
+	rookSq := sq("h1")
+
+	leftExtreme := sq("a2").File
+	rightExtreme := sq("g2").File
+
+	delta := []Square{{Rank: 0, File: 1}, {Rank: 0, File: -1}}
+	activeSquare := []Square{sq("g2"), sq("g8")}
+
+	state := simulatePosition(map[string]Piece{
+		activeSquare[0].String(): NewKing(PieceColor_White),
+		rookSq.String():          NewRook(PieceColor_White),
+		activeSquare[1].String(): NewKing(PieceColor_Black),
+	}, false)
+
+	g := Game{state: state, repititionHashes: make(map[string]int)}
+
+	for nMove := 0; nMove < 50; nMove++ {
+		for nSide := 0; nSide < 2; nSide++ {
+			if nSide == 0 && nMove > 0 && nMove%14 == 0 {
+				oldSq := rookSq
+				rookSq = rookSq.Adding(Square{Rank: 1})
+				if err := g.Move(Move{From: oldSq, To: rookSq}); err != nil {
+					t.Errorf("Move %d Repition avoidance move failed %v", nMove, err)
+				}
+				continue
+			}
+			if activeSquare[nSide].File == leftExtreme {
+				delta[nSide].File = 1
+			} else if activeSquare[nSide].File == rightExtreme {
+				delta[nSide].File = -1
+			}
+			oldSq := activeSquare[nSide]
+			activeSquare[nSide] = activeSquare[nSide].Adding(delta[nSide])
+			if err := g.Move(Move{From: oldSq, To: activeSquare[nSide]}); err != nil {
+				t.Errorf("Move %d side %d movement failed: from %s to %s: %v",
+					nMove, nSide, oldSq.String(), activeSquare[nSide].String(), err)
+			}
+		}
+		result := g.ComputeResult()
+		if nMove == 49 {
+			if result.Result != GameResult_Draw {
+				t.Errorf("Iteration %d: Got game result : %d, want: %d", nMove, result.Result, GameResult_Draw)
+			}
+			if result.DrawReason == nil {
+				t.Errorf("Iteration %d: Got no draw reason, want: %d", nMove, DrawReason_50Moves)
+			} else if *result.DrawReason != DrawReason_50Moves {
+				t.Errorf("Iteration %d: Got draw reason %d, want: %d", nMove, *result.DrawReason, DrawReason_50Moves)
+			}
+		} else if result.Result != GameResult_Active {
+			t.Errorf("Iteration %d. Got game result : %d, want: %d", nMove, result.Result, GameResult_Active)
+		}
 	}
 }

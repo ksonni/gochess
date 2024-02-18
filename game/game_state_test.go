@@ -82,7 +82,7 @@ func clearSquares(g *GameState, squares ...string) {
 	}
 }
 
-func emulatePosition(strPieces map[string]Piece, append bool) *GameState {
+func simulatePosition(strPieces map[string]Piece, append bool) *GameState {
 	g := NewGameState()
 	pieces := make(map[Square]Piece)
 	for sqStr, piece := range strPieces {
