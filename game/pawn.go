@@ -107,6 +107,7 @@ func (p Pawn) planPawnMovement(move Move, movement *pawnMovement, g *GameState) 
 
 	params := AppendPosParams{
 		enpassantTarget: p.isAttackedEnPassant(move, g),
+		pawnMove:        true,
 	}
 	return g.appendingPosition(board, move, params), nil
 }

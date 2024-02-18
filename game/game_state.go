@@ -13,6 +13,8 @@ type GameState struct {
 	numMoves        int
 	castlingSquares map[Square]SquareMovementStatus
 	enpassantTarget *Square
+	lastCaptureMove int
+	lastPawnMove    int
 }
 
 func (g *GameState) Board() *Board {
@@ -121,6 +123,7 @@ func (g *GameState) CountPieces() map[PieceColor]map[PieceType]int {
 
 type AppendPosParams struct {
 	enpassantTarget bool
+	pawnMove        bool
 }
 
 func (g *GameState) appendingPosition(board *Board, move Move, params AppendPosParams) *GameState {
@@ -140,11 +143,24 @@ func (g *GameState) appendingPosition(board *Board, move Move, params AppendPosP
 		}
 	}
 
+	lastPawnMove := g.lastPawnMove
+	if params.pawnMove {
+		lastPawnMove = numMoves
+	}
+
+	lastCaptureMove := g.lastCaptureMove
+	if _, exists := g.board.GetPiece(move.To); exists ||
+		len(g.board.pieces) < len(board.pieces) {
+		lastCaptureMove = numMoves
+	}
+
 	return &GameState{
 		board,
 		numMoves,
 		castlingSquares,
 		enpassantTarget,
+		lastCaptureMove,
+		lastPawnMove,
 	}
 }
 
