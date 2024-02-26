@@ -93,7 +93,7 @@ func (g *GameState) PlanPossibleMoves(from Square) []MovePlan {
 
 func (g *GameState) IsSideInCheck(color PieceColor) bool {
 	attackMap := g.ComputeSquaresAttackedBySide(color.Opponent())
-	square, ok := g.Board().GetKingSquare(color)
+	square, ok := g.Board().getKingSquare(color)
 	if !ok {
 		return false
 	}

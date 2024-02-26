@@ -135,11 +135,11 @@ func (p Pawn) computeNonAttackedMovableSquares(from Square, g *GameState) map[Sq
 
 	m1 := from.Adding(delta)
 	if _, exists := board.GetPiece(m1); !exists {
-		movable[m1] = board.SquareInRange(m1)
+		movable[m1] = board.ContainsSquare(m1)
 	}
 	m2 := m1.Adding(delta)
 	if _, exists := board.GetPiece(m2); !exists && movable[m1] && p.homeRank(g) == from.Rank {
-		movable[m2] = board.SquareInRange(m2)
+		movable[m2] = board.ContainsSquare(m2)
 	}
 	return movable
 }
@@ -157,7 +157,7 @@ func (p Pawn) computeNonAttackedMovements(from Square, g *GameState) map[Square]
 
 func (p Pawn) attacksNormal(from Square, to Square, g *GameState) bool {
 	board := g.Board()
-	if !board.SquareInRange(to) {
+	if !board.ContainsSquare(to) {
 		return false
 	}
 	// Square must be in attacking range
@@ -196,7 +196,7 @@ func (p Pawn) computeNormalAttackedMovements(from Square, g *GameState) map[Squa
 
 func (p Pawn) attacksEnPassant(from Square, to Square, g *GameState) bool {
 	board := g.Board()
-	if !board.SquareInRange(to) {
+	if !board.ContainsSquare(to) {
 		return false
 	}
 	// Square must be adjacent on the same rank

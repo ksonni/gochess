@@ -23,7 +23,7 @@ func (mover deltaMover) canMoveWithDelta(from Square, to Square, delta Square, m
 	if !exists {
 		return false
 	}
-	for current, i := from.Adding(delta), 1; board.SquareInRange(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
+	for current, i := from.Adding(delta), 1; board.ContainsSquare(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
 		if currentPiece, exists := board.GetPiece(current); exists && currentPiece.Color() == piece.Color() {
 			return false
 		}
@@ -88,7 +88,7 @@ func (mover deltaMover) computeAttackedSquaresWithDelta(
 	if !exists {
 		return make(map[Square]bool)
 	}
-	for current, i := sq.Adding(delta), 1; board.SquareInRange(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
+	for current, i := sq.Adding(delta), 1; board.ContainsSquare(current) && (maxSteps == 0 || i <= maxSteps); current, i = current.Adding(delta), i+1 {
 		if currentPiece, exists := board.GetPiece(current); exists {
 			if currentPiece.Color() != piece.Color() {
 				attacked[current] = true
