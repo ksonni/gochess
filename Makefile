@@ -1,8 +1,8 @@
 build:
-	cd app/cmd && go build -o gochess
+	cd app && go build -o app ./cmd/
 
 run:
-	make build && ./app/cmd/gochess
+	make build && ./app/app
 
 test:
 	cd app && go test ./... -v
