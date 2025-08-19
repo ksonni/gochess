@@ -1,4 +1,4 @@
-FROM golang:1.22 AS builder
+FROM golang:1.25 AS builder
 
 WORKDIR /app
 
@@ -13,6 +13,7 @@ FROM debian:bookworm-slim
 WORKDIR /app
 
 COPY --from=builder /app/app .
+COPY --from=builder /app/db/migrations ./db/migrations
 EXPOSE 8080
 
 CMD ["./app"]
