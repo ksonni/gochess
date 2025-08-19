@@ -1,8 +1,8 @@
 build:
 	cd app && go build -o app ./cmd/
 
-run:
-	make build && ./app/app
+up:
+	docker-compose build && docker-compose up
 
 test:
 	cd app && go test ./... -v
