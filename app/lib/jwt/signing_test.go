@@ -1,19 +1,31 @@
 package jwt
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/google/uuid"
+)
 
 const kTestSecret = "9Atwe3XmzcsoEZZZecnI4WeMoqAn7vlHg0B3XmGXS50="
 const kBadSecret = "8Atwe3XmzcsoEZZZecnI4WeMoqAn7vlHg0B3XmGXS50="
 
 type TestClaims struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Admin bool   `json:"admin"`
+	Id          uuid.UUID       `json:"id"`
+	Name        string          `json:"name"`
+	Permissions TestPermissions `json:"permissions"`
+}
+
+type TestPermissions struct {
+	Play      bool `json:"play"`
+	Challenge bool `json:"challenge"`
 }
 
 var c = TestClaims{
-	Id:   "id",
+	Id:   uuid.New(),
 	Name: "John",
+	Permissions: TestPermissions{
+		Challenge: true,
+	},
 }
 
 func TestEncodesDecodes(t *testing.T) {
