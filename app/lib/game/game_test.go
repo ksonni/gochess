@@ -2,159 +2,197 @@ package game
 
 import (
 	"testing"
+	"testing/synctest"
+	"time"
 )
 
 func TestResults(t *testing.T) {
 	stalemate := DrawReason_Stalemate
 	insufficientMat := DrawReason_InusfficientMaterial
+	insufficientMatTimeout := DrawReason_InusfficientMaterialTimeout
 
 	tests := map[string]struct {
 		pos    map[string]Piece
 		result ResultData
+		clocks map[PieceColor]*Clock
 	}{
+		// Timeout
+		"Reports timeout": {
+			pos: map[string]Piece{
+				"e4": NewPawn(PieceColor_White),
+				"e5": NewKing(PieceColor_White),
+				"a4": NewKing(PieceColor_Black),
+				"a5": NewKing(PieceColor_Black),
+			},
+			result: ResultData{Result: GameResult_Timeout},
+			clocks: map[PieceColor]*Clock{
+				PieceColor_White: NewClock(time.Minute),
+				PieceColor_Black: NewClock(0),
+			},
+		},
+
 		// Checkmate
 		"Sole king checkmate": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"c8": NewKing(PieceColor_Black),
 				"h8": NewRook(PieceColor_White),
 				"g7": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Checkmate},
+			result: ResultData{Result: GameResult_Checkmate},
 		},
 		"Checkmate with an unhelpful friendly piece present": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"c8": NewKing(PieceColor_Black),
 				"a1": NewBishop(PieceColor_Black),
 				"h8": NewRook(PieceColor_White),
 				"g7": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Checkmate},
+			result: ResultData{Result: GameResult_Checkmate},
 		},
 		"Checkmate evadable if friendly piece can capture": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"c8": NewKing(PieceColor_Black),
 				"h1": NewRook(PieceColor_Black),
 				"h8": NewRook(PieceColor_White),
 				"g7": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Active},
+			result: ResultData{Result: GameResult_Active},
 		},
 		"Checkmate evadable if friendly piece can block": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"c8": NewKing(PieceColor_Black),
 				"a5": NewBishop(PieceColor_Black),
 				"h8": NewRook(PieceColor_White),
 				"g7": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Active},
+			result: ResultData{Result: GameResult_Active},
 		},
 		"Checkmate evadable if sole king can move": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"c8": NewKing(PieceColor_Black),
 				"h8": NewRook(PieceColor_White),
 				"g6": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Active},
+			result: ResultData{Result: GameResult_Active},
 		},
 
 		// Stalemate
 		"Stalemate with a sole king": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a7": NewPawn(PieceColor_White),
 				"a6": NewKing(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &stalemate},
+			result: ResultData{Result: GameResult_Draw, DrawReason: &stalemate},
 		},
 		"Stalemate with other pieces on the board": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a7": NewPawn(PieceColor_White),
 				"a6": NewKing(PieceColor_White),
 				"d5": NewPawn(PieceColor_Black),
 				"d4": NewPawn(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &stalemate},
+			result: ResultData{Result: GameResult_Draw, DrawReason: &stalemate},
 		},
 		"Not stalemate if king blocked but other pieces movable": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a7": NewPawn(PieceColor_White),
 				"a6": NewKing(PieceColor_White),
 				"d5": NewPawn(PieceColor_Black),
 			},
-			ResultData{Result: GameResult_Active},
+			result: ResultData{Result: GameResult_Active},
 		},
 
 		// Insufficient material
 		"King vs King insufficient material": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a6": NewKing(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
 		},
 		"King vs King & white knight insufficient material": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a6": NewKing(PieceColor_White),
 				"a1": NewKnight(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
 		},
 		"King vs King & black knight insufficient material": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a6": NewKing(PieceColor_White),
 				"a1": NewKnight(PieceColor_Black),
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
 		},
 		"King vs King & white bishop insufficient material": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a6": NewKing(PieceColor_White),
 				"a1": NewBishop(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
 		},
 		"King vs King & black bishop insufficient material": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a6": NewKing(PieceColor_White),
 				"a1": NewBishop(PieceColor_Black),
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
 		},
 		"King vs King & opposing square colour bishops insufficient material": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a1": NewBishop(PieceColor_Black),
 				"a6": NewKing(PieceColor_White),
 				"b1": NewBishop(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
 		},
 		"King vs King & same square colour bishops, not insufficient material": {
-			map[string]Piece{
+			pos: map[string]Piece{
 				"a8": NewKing(PieceColor_Black),
 				"a1": NewBishop(PieceColor_Black),
 				"a6": NewKing(PieceColor_White),
 				"a3": NewBishop(PieceColor_White),
 			},
-			ResultData{Result: GameResult_Active},
+			result: ResultData{Result: GameResult_Active},
+		},
+		"Combination of timeout and opponent having insufficient material": {
+			pos: map[string]Piece{
+				"e5": NewKing(PieceColor_White),
+				"a4": NewKing(PieceColor_Black),
+				"a5": NewKing(PieceColor_Black),
+			},
+			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMatTimeout},
+			clocks: map[PieceColor]*Clock{
+				PieceColor_White: NewClock(time.Minute),
+				PieceColor_Black: NewClock(0),
+			},
 		},
 	}
 
 	for title, pos := range tests {
-		g := &Game{
-			state: simulatePosition(pos.pos, true),
+		g := NewGame(TimeControl_Thirty)
+
+		g.state = simulatePosition(pos.pos, true)
+
+		if pos.clocks != nil {
+			g.clocks = pos.clocks
 		}
+
+		g.Start()
+
 		result := g.ComputeResult()
 		if result.Result != pos.result.Result {
 			t.Errorf("%s: got game result %v, want %v",
@@ -294,7 +332,8 @@ func Test3FoldRepetition(t *testing.T) {
 	}
 
 	assertDrawAtEnd := func(title string, params ThreeFoldParams) {
-		g := NewGame()
+		g := NewGame(TimeControl_Thirty)
+		g.Start()
 		moves, mustDraw := params.moves, params.draw
 		for i, move := range moves {
 			err := g.Move(move.Move())
@@ -402,7 +441,8 @@ func TestTracksCapturesAndPawnMoves(t *testing.T) {
 	}
 
 	assertTracking := func(title string, params CapturesParams) {
-		g := NewGame()
+		g := NewGame(TimeControl_Thirty)
+		g.Start()
 		for i, move := range params.moves {
 			err := g.Move(move.move.Move())
 			if err != nil {
@@ -440,7 +480,9 @@ func Test50MoveDrawCondition(t *testing.T) {
 		activeSquare[1].String(): NewKing(PieceColor_Black),
 	}, false)
 
-	g := Game{state: state, repititionHashes: make(map[string]int)}
+	g := NewGame(TimeControl_Thirty)
+	g.Start()
+	g.state = state
 
 	for nMove := 0; nMove < 50; nMove++ {
 		for nSide := 0; nSide < 2; nSide++ {
@@ -478,4 +520,170 @@ func Test50MoveDrawCondition(t *testing.T) {
 			t.Errorf("Iteration %d. Got game result : %d, want: %d", nMove, result.Result, GameResult_Active)
 		}
 	}
+}
+
+func TestTracksTime(t *testing.T) {
+	g := NewGame(TimeControl_Thirty)
+
+	base := 30 * time.Minute
+
+	params := []timeTrackingParm{
+		{
+			move:      Move{From: sq("e2"), To: sq("e4")},
+			timeTaken: time.Second,
+			wantRemaining: map[PieceColor]time.Duration{
+				PieceColor_White: base - time.Second,
+				PieceColor_Black: base,
+			},
+		},
+		{
+			move:      Move{From: sq("e7"), To: sq("e5")},
+			timeTaken: 2 * time.Second,
+			wantRemaining: map[PieceColor]time.Duration{
+				PieceColor_White: base - time.Second,
+				PieceColor_Black: base - 2*time.Second,
+			},
+		},
+		{
+			move:      Move{From: sq("d2"), To: sq("d4")},
+			timeTaken: 1 * time.Second,
+			wantRemaining: map[PieceColor]time.Duration{
+				PieceColor_White: base - 2*time.Second,
+				PieceColor_Black: base - 2*time.Second,
+			},
+		},
+		{
+			move:      Move{From: sq("d7"), To: sq("d5")},
+			timeTaken: 3 * time.Second,
+			wantRemaining: map[PieceColor]time.Duration{
+				PieceColor_White: base - 2*time.Second,
+				PieceColor_Black: base - 5*time.Second,
+			},
+		},
+	}
+
+	testTimeTracking(t, g, params)
+}
+
+func TestTracksTimeWithIncrement(t *testing.T) {
+	g := NewGame(TimeControl_TwoOne)
+
+	base := 2 * time.Minute
+
+	params := []timeTrackingParm{
+		{
+			move:      Move{From: sq("e2"), To: sq("e4")},
+			timeTaken: 2 * time.Second,
+			wantRemaining: map[PieceColor]time.Duration{
+				PieceColor_White: base - time.Second,
+				PieceColor_Black: base,
+			},
+		},
+		{
+			move:      Move{From: sq("e7"), To: sq("e5")},
+			timeTaken: 5 * time.Second,
+			wantRemaining: map[PieceColor]time.Duration{
+				PieceColor_White: base - time.Second,
+				PieceColor_Black: base - 4*time.Second,
+			},
+		},
+		{
+			move:      Move{From: sq("d2"), To: sq("d4")},
+			timeTaken: 1 * time.Second,
+			wantRemaining: map[PieceColor]time.Duration{
+				PieceColor_White: base - time.Second,
+				PieceColor_Black: base - 4*time.Second,
+			},
+		},
+		{
+			move:      Move{From: sq("d7"), To: sq("d5")},
+			timeTaken: 3 * time.Second,
+			wantRemaining: map[PieceColor]time.Duration{
+				PieceColor_White: base - time.Second,
+				PieceColor_Black: base - 6*time.Second,
+			},
+		},
+	}
+	testTimeTracking(t, g, params)
+}
+
+func TestRejectsInvalidMoves(t *testing.T) {
+	g := NewGame(TimeControl_Thirty)
+	g.Start()
+	err := g.Move(Move{sq("a1"), sq("a2"), nil})
+	if err == nil {
+		t.Errorf("accepted invalid move")
+	}
+}
+
+func TestRejectsMovesWhenOutOfTime(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		g := NewGame(TimeControl_Thirty)
+		g.Start()
+
+		time.Sleep(32 * time.Minute)
+		synctest.Wait()
+
+		err := g.Move(Move{sq("e2"), sq("e4"), nil})
+		if err == nil {
+			t.Errorf("accepted first move when out of time")
+		}
+	})
+
+	synctest.Test(t, func(t *testing.T) {
+		g := NewGame(TimeControl_Thirty)
+		g.Start()
+
+		time.Sleep(1 * time.Minute)
+		synctest.Wait()
+
+		err := g.Move(Move{sq("e2"), sq("e4"), nil})
+		if err != nil {
+			t.Errorf("first move failed unexpectedly")
+		}
+		time.Sleep(32 * time.Minute)
+		err = g.Move(Move{sq("e7"), sq("e5"), nil})
+		if err == nil {
+			t.Errorf("second move did not fail despite running out of time")
+		}
+	})
+}
+
+// Helper
+
+type timeTrackingParm struct {
+	move          Move
+	timeTaken     time.Duration
+	wantRemaining map[PieceColor]time.Duration
+}
+
+func testTimeTracking(t *testing.T, g *Game, params []timeTrackingParm) {
+	synctest.Test(t, func(t *testing.T) {
+
+		whiteClock := g.clocks[PieceColor_White]
+		blackClock := g.clocks[PieceColor_Black]
+
+		g.Start()
+
+		for _, p := range params {
+			time.Sleep(p.timeTaken)
+			synctest.Wait()
+
+			if error := g.Move(p.move); error != nil {
+				t.Fatalf("Move(%s) unexpted error occured: %v", p.move, error)
+			}
+
+			want := p.wantRemaining[PieceColor_White]
+			got := whiteClock.RemainingTime()
+
+			if got != want {
+				t.Errorf("Move(%s) got remaining white time %s, want %s", p.move, got, want)
+			}
+			want = p.wantRemaining[PieceColor_Black]
+			got = blackClock.RemainingTime()
+			if got != want {
+				t.Errorf("Move(%s) got remaining black time %s, want %s", p.move, got, want)
+			}
+		}
+	})
 }
