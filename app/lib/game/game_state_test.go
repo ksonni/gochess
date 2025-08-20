@@ -34,7 +34,8 @@ func TestIsSideInCheck(t *testing.T) {
 }
 
 func TestStateHashing(t *testing.T) {
-	g := NewGame()
+	g := NewGame(TimeControl_Thirty)
+    g.Start()
 	g.Move(Move{From: sq("e2"), To: sq("e4")})
 	hash := g.state.repititionHashableString()
 	want := "a1=0_2,a2=0_5,a7=1_5,a8=1_2,b1=0_4,b2=0_5,b7=1_5,b8=1_4,c1=0_3,c2=0_5,c7=1_5,c8=1_3,d1=0_1,d2=0_5,d7=1_5,d8=1_1,e1=0_0,e4=0_5,e7=1_5," +

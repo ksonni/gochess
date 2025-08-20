@@ -1,8 +1,12 @@
 package game
 
+import "fmt"
+
 type Game struct {
 	state            *GameState
 	repititionHashes map[string]int
+	control          TimeControl
+	clocks           map[PieceColor]*Clock
 }
 
 type Move struct {
@@ -22,6 +26,7 @@ const (
 	GameResult_Active Result = iota
 	GameResult_Draw
 	GameResult_Checkmate
+	GameResult_Timeout
 )
 
 type DrawReason int
@@ -31,6 +36,7 @@ const (
 	DrawReason_3FoldRepetition
 	DrawReason_InusfficientMaterial
 	DrawReason_50Moves
+	DrawReason_InusfficientMaterialTimeout
 )
 
 type ResultData struct {
@@ -45,16 +51,28 @@ const (
 	drawMoveCount = 50 * 2
 )
 
-func NewGame() *Game {
+func NewGame(control TimeControl) *Game {
 	return &Game{
 		state:            NewGameState(),
 		repititionHashes: make(map[string]int),
+		control:          control,
+		clocks: map[PieceColor]*Clock{
+			PieceColor_White: NewClock(control.Total),
+			PieceColor_Black: NewClock(control.Total),
+		},
 	}
+}
+
+func (g *Game) Start() {
+	g.clocks[g.state.MovingSide()].Start()
 }
 
 func (g *Game) Move(move Move) error {
 	state, err := g.state.WithMove(move)
 	if err != nil {
+		return err
+	}
+	if err = g.toggleClocks(); err != nil {
 		return err
 	}
 	g.state = state
@@ -69,7 +87,14 @@ func (game *Game) ComputeResult() ResultData {
 	result := GameResult_Active
 	drawReason := DrawReason_Stalemate
 
-	if possibleMoves := g.PlanPossibleMovesForSide(side); len(possibleMoves) == 0 {
+	if hasTime := game.clocks[side].RemainingTime() > 0; !hasTime {
+		if game.sideHasMaterialForCheckmate(g, side.Opponent()) {
+			result = GameResult_Timeout
+		} else {
+			result = GameResult_Draw
+			drawReason = DrawReason_InusfficientMaterialTimeout
+		}
+	} else if possibleMoves := g.PlanPossibleMovesForSide(side); len(possibleMoves) == 0 {
 		if g.IsSideInCheck(side) {
 			result = GameResult_Checkmate
 		} else {
@@ -90,6 +115,22 @@ func (game *Game) ComputeResult() ResultData {
 
 // Helpers
 
+func (game *Game) toggleClocks() error {
+	side := game.state.MovingSide()
+
+	if clock, _ := game.clocks[side]; clock.Running() {
+		clock.Stop()
+		if clock.RemainingTime() <= 0 {
+			return fmt.Errorf("game: clock ran out of time")
+		}
+		clock.Increment(game.control.Increment)
+	}
+	if otherClock, _ := game.clocks[side.Opponent()]; otherClock.RemainingTime() > 0 {
+		otherClock.Start()
+	}
+	return nil
+}
+
 func (game *Game) testForDraw(g *Game, color PieceColor) (*DrawReason, bool) {
 	drawReason := DrawReason_InusfficientMaterial
 	if game.hasInsufficientMaterial(g.state, color) {
@@ -102,6 +143,20 @@ func (game *Game) testForDraw(g *Game, color PieceColor) (*DrawReason, bool) {
 		return nil, false
 	}
 	return &drawReason, true
+}
+
+func (game *Game) sideHasMaterialForCheckmate(g *GameState, color PieceColor) bool {
+	counts := g.CountPieces()[color]
+	totalPieces := len(counts)
+	// Lone/no king
+	if totalPieces <= 1 || counts[PieceType_King] <= 0 {
+		return false
+	}
+	// King + Knight/Bishop
+	if totalPieces == 2 && (counts[PieceType_Bishop] == 1 || counts[PieceType_Knight] == 1) {
+		return false
+	}
+	return true
 }
 
 func (game *Game) hasInsufficientMaterial(g *GameState, color PieceColor) bool {
