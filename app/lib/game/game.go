@@ -27,6 +27,7 @@ const (
 	GameResult_Draw Result = iota
 	GameResult_Checkmate
 	GameResult_Timeout
+	GameResult_Resigned
 )
 
 type DrawReason int
@@ -38,6 +39,7 @@ const (
 	DrawReason_InusfficientMaterial
 	DrawReason_50Moves
 	DrawReason_InusfficientMaterialTimeout
+	DrawReason_Agreement
 )
 
 type ResultData struct {
@@ -93,7 +95,7 @@ func (g *Game) Move(move Move) error {
 }
 
 func (game *Game) Result() (*ResultData, bool) {
-	if game.result != nil {
+	if game.result == nil {
 		game.result, _ = game.computeResult()
 	}
 	return game.result, game.result != nil
@@ -102,6 +104,29 @@ func (game *Game) Result() (*ResultData, bool) {
 func (game *Game) HasEnded() bool {
 	_, ended := game.Result()
 	return ended
+}
+
+func (game *Game) AgreeDraw() error {
+	if game.HasEnded() {
+		return fmt.Errorf("game: can't agree draw, game has ended")
+	}
+	game.result = &ResultData{
+		Result:     GameResult_Draw,
+		DrawReason: DrawReason_Agreement,
+	}
+	return nil
+}
+
+func (game *Game) Resign(side PieceColor) error {
+	if game.HasEnded() {
+		return fmt.Errorf("game: can't resign, game has ended")
+	}
+	winner := side.Opponent()
+	game.result = &ResultData{
+		Result: GameResult_Resigned,
+		Winner: &winner,
+	}
+	return nil
 }
 
 // Helpers

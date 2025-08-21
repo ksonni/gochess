@@ -644,6 +644,68 @@ func TestRejectsMovesWhenOutOfTime(t *testing.T) {
 	})
 }
 
+func TestDrawByAgreement(t *testing.T) {
+	g := NewGame(TimeControl_Thirty)
+	if err := g.AgreeDraw(); err != nil {
+		t.Fatalf("AgreeDraw() errored: %v", err)
+	}
+
+	if result, ended := g.Result(); ended {
+		if result.DrawReason != DrawReason_Agreement {
+			t.Errorf("Result() draw reason got %v, want %v", result.DrawReason, DrawReason_Agreement)
+		}
+		if result.Result != GameResult_Draw {
+			t.Errorf("Result() result got %v, want %v", result.Result, GameResult_Draw)
+		}
+		if result.Winner != nil {
+			t.Errorf("Result() winner got %v, want nil", *result.Winner)
+		}
+	} else {
+		t.Errorf("Result() ended after agreeing draw got %v want %v", false, true)
+	}
+
+	move := Move{sq("e2"), sq("e4"), nil}
+	if err := g.Move(move); err == nil {
+		t.Errorf("Move(%s) was allowed even after agreeing a draw", move)
+	}
+
+	if err := g.AgreeDraw(); err == nil {
+		t.Errorf("AgreeDraw() was allowed even after the game has ended")
+	}
+}
+
+func TestResign(t *testing.T) {
+	g := NewGame(TimeControl_Thirty)
+	if err := g.Resign(PieceColor_White); err != nil {
+		t.Fatalf("Resign() errored: %v", err)
+	}
+
+	if result, ended := g.Result(); ended {
+		if result.Result != GameResult_Resigned {
+			t.Errorf("Result() result got %v, want %v", result.Result, GameResult_Resigned)
+		}
+		if result.Winner == nil {
+			t.Errorf("Result() winner got nil, want %v", PieceColor_Black)
+		} else if *result.Winner != PieceColor_Black {
+			t.Errorf("Result() winner got %v, want %v", *result.Winner, PieceColor_Black)
+		}
+		if result.DrawReason != DrawReason_None {
+			t.Errorf("Result() draw reason got %v, want %v", result.DrawReason, DrawReason_None)
+		}
+	} else {
+		t.Errorf("Result() ended after resigning got %v want %v", false, true)
+	}
+
+	move := Move{sq("e2"), sq("e4"), nil}
+	if err := g.Move(move); err == nil {
+		t.Errorf("Move(%s) was allowed even after resigning", move)
+	}
+
+	if err := g.Resign(PieceColor_Black); err == nil {
+		t.Errorf("Resign() was allowed even after the game has ended")
+	}
+}
+
 // Helper
 
 type timeTrackingParm struct {
