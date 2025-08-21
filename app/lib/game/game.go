@@ -7,6 +7,7 @@ type Game struct {
 	repititionHashes map[string]int
 	control          TimeControl
 	clocks           map[PieceColor]*Clock
+	result           *ResultData
 }
 
 type Move struct {
@@ -23,8 +24,7 @@ type MovePlan struct {
 type Result int
 
 const (
-	GameResult_Active Result = iota
-	GameResult_Draw
+	GameResult_Draw Result = iota
 	GameResult_Checkmate
 	GameResult_Timeout
 )
@@ -32,7 +32,8 @@ const (
 type DrawReason int
 
 const (
-	DrawReason_Stalemate DrawReason = iota
+	DrawReason_None DrawReason = iota
+	DrawReason_Stalemate
 	DrawReason_3FoldRepetition
 	DrawReason_InusfficientMaterial
 	DrawReason_50Moves
@@ -41,7 +42,8 @@ const (
 
 type ResultData struct {
 	Result     Result
-	DrawReason *DrawReason
+	DrawReason DrawReason
+	Winner     *PieceColor
 }
 
 const (
@@ -64,10 +66,16 @@ func NewGame(control TimeControl) *Game {
 }
 
 func (g *Game) Start() {
+	if g.HasEnded() || g.state.NumMoves() > 0 {
+		return
+	}
 	g.clocks[g.state.MovingSide()].Start()
 }
 
 func (g *Game) Move(move Move) error {
+	if g.HasEnded() {
+		return fmt.Errorf("game: game has ended, can not move")
+	}
 	state, err := g.state.WithMove(move)
 	if err != nil {
 		return err
@@ -78,42 +86,57 @@ func (g *Game) Move(move Move) error {
 	g.state = state
 	hash := state.repititionHashString()
 	g.repititionHashes[hash] = g.repititionHashes[hash] + 1
+
+	g.result, _ = g.computeResult()
+
 	return nil
 }
 
-func (game *Game) ComputeResult() ResultData {
-	g := game.state
-	side := g.MovingSide()
-	result := GameResult_Active
-	drawReason := DrawReason_Stalemate
-
-	if hasTime := game.clocks[side].RemainingTime() > 0; !hasTime {
-		if game.sideHasMaterialForCheckmate(g, side.Opponent()) {
-			result = GameResult_Timeout
-		} else {
-			result = GameResult_Draw
-			drawReason = DrawReason_InusfficientMaterialTimeout
-		}
-	} else if possibleMoves := g.PlanPossibleMovesForSide(side); len(possibleMoves) == 0 {
-		if g.IsSideInCheck(side) {
-			result = GameResult_Checkmate
-		} else {
-			result = GameResult_Draw
-			drawReason = DrawReason_Stalemate
-		}
-	} else if reason, isDraw := game.testForDraw(game, side); isDraw {
-		result = GameResult_Draw
-		drawReason = *reason
+func (game *Game) Result() (*ResultData, bool) {
+	if game.result != nil {
+		game.result, _ = game.computeResult()
 	}
+	return game.result, game.result != nil
+}
 
-	out := ResultData{Result: result}
-	if result == GameResult_Draw {
-		out.DrawReason = &drawReason
-	}
-	return out
+func (game *Game) HasEnded() bool {
+	_, ended := game.Result()
+	return ended
 }
 
 // Helpers
+
+func (game *Game) computeResult() (*ResultData, bool) {
+	g := game.state
+	side := g.MovingSide()
+	opponent := side.Opponent()
+
+	if hasTime := game.clocks[side].RemainingTime() > 0; !hasTime {
+		if game.sideHasMaterialForCheckmate(g, opponent) {
+			return &ResultData{Result: GameResult_Timeout, Winner: &opponent}, true
+		} else {
+			return &ResultData{
+				Result:     GameResult_Draw,
+				DrawReason: DrawReason_InusfficientMaterialTimeout,
+			}, true
+		}
+	} else if possibleMoves := g.PlanPossibleMovesForSide(side); len(possibleMoves) == 0 {
+		if g.IsSideInCheck(side) {
+			return &ResultData{Result: GameResult_Checkmate, Winner: &opponent}, true
+		} else {
+			return &ResultData{
+				Result:     GameResult_Draw,
+				DrawReason: DrawReason_Stalemate,
+			}, true
+		}
+	} else if reason, isDraw := game.testForDraw(game, side); isDraw {
+		return &ResultData{
+			Result:     GameResult_Draw,
+			DrawReason: reason,
+		}, true
+	}
+	return nil, false
+}
 
 func (game *Game) toggleClocks() error {
 	side := game.state.MovingSide()
@@ -131,18 +154,15 @@ func (game *Game) toggleClocks() error {
 	return nil
 }
 
-func (game *Game) testForDraw(g *Game, color PieceColor) (*DrawReason, bool) {
-	drawReason := DrawReason_InusfficientMaterial
+func (game *Game) testForDraw(g *Game, color PieceColor) (DrawReason, bool) {
 	if game.hasInsufficientMaterial(g.state, color) {
-		drawReason = DrawReason_InusfficientMaterial
+		return DrawReason_InusfficientMaterial, true
 	} else if game.hasReached3FoldRepetition(g, color) {
-		drawReason = DrawReason_3FoldRepetition
+		return DrawReason_3FoldRepetition, true
 	} else if game.qualifiesFor50MoveRule(g.state, color) {
-		drawReason = DrawReason_50Moves
-	} else {
-		return nil, false
+		return DrawReason_50Moves, true
 	}
-	return &drawReason, true
+	return DrawReason_None, false
 }
 
 func (game *Game) sideHasMaterialForCheckmate(g *GameState, color PieceColor) bool {
