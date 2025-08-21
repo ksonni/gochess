@@ -7,13 +7,11 @@ import (
 )
 
 func TestResults(t *testing.T) {
-	stalemate := DrawReason_Stalemate
-	insufficientMat := DrawReason_InusfficientMaterial
-	insufficientMatTimeout := DrawReason_InusfficientMaterialTimeout
+	white := PieceColor_White
 
 	tests := map[string]struct {
 		pos    map[string]Piece
-		result ResultData
+		result *ResultData
 		clocks map[PieceColor]*Clock
 	}{
 		// Timeout
@@ -24,7 +22,7 @@ func TestResults(t *testing.T) {
 				"a4": NewKing(PieceColor_Black),
 				"a5": NewKing(PieceColor_Black),
 			},
-			result: ResultData{Result: GameResult_Timeout},
+			result: &ResultData{Result: GameResult_Timeout, Winner: &white},
 			clocks: map[PieceColor]*Clock{
 				PieceColor_White: NewClock(time.Minute),
 				PieceColor_Black: NewClock(0),
@@ -39,7 +37,7 @@ func TestResults(t *testing.T) {
 				"g7": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Checkmate},
+			result: &ResultData{Result: GameResult_Checkmate, Winner: &white},
 		},
 		"Checkmate with an unhelpful friendly piece present": {
 			pos: map[string]Piece{
@@ -49,7 +47,7 @@ func TestResults(t *testing.T) {
 				"g7": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Checkmate},
+			result: &ResultData{Result: GameResult_Checkmate, Winner: &white},
 		},
 		"Checkmate evadable if friendly piece can capture": {
 			pos: map[string]Piece{
@@ -59,7 +57,7 @@ func TestResults(t *testing.T) {
 				"g7": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Active},
+			result: nil,
 		},
 		"Checkmate evadable if friendly piece can block": {
 			pos: map[string]Piece{
@@ -69,7 +67,7 @@ func TestResults(t *testing.T) {
 				"g7": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Active},
+			result: nil,
 		},
 		"Checkmate evadable if sole king can move": {
 			pos: map[string]Piece{
@@ -78,7 +76,7 @@ func TestResults(t *testing.T) {
 				"g6": NewRook(PieceColor_White),
 				"c1": NewKing(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Active},
+			result: nil,
 		},
 
 		// Stalemate
@@ -88,7 +86,7 @@ func TestResults(t *testing.T) {
 				"a7": NewPawn(PieceColor_White),
 				"a6": NewKing(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Draw, DrawReason: &stalemate},
+			result: &ResultData{Result: GameResult_Draw, DrawReason: DrawReason_Stalemate},
 		},
 		"Stalemate with other pieces on the board": {
 			pos: map[string]Piece{
@@ -98,7 +96,7 @@ func TestResults(t *testing.T) {
 				"d5": NewPawn(PieceColor_Black),
 				"d4": NewPawn(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Draw, DrawReason: &stalemate},
+			result: &ResultData{Result: GameResult_Draw, DrawReason: DrawReason_Stalemate},
 		},
 		"Not stalemate if king blocked but other pieces movable": {
 			pos: map[string]Piece{
@@ -107,7 +105,7 @@ func TestResults(t *testing.T) {
 				"a6": NewKing(PieceColor_White),
 				"d5": NewPawn(PieceColor_Black),
 			},
-			result: ResultData{Result: GameResult_Active},
+			result: nil,
 		},
 
 		// Insufficient material
@@ -116,7 +114,7 @@ func TestResults(t *testing.T) {
 				"a8": NewKing(PieceColor_Black),
 				"a6": NewKing(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: &ResultData{Result: GameResult_Draw, DrawReason: DrawReason_InusfficientMaterial},
 		},
 		"King vs King & white knight insufficient material": {
 			pos: map[string]Piece{
@@ -124,7 +122,7 @@ func TestResults(t *testing.T) {
 				"a6": NewKing(PieceColor_White),
 				"a1": NewKnight(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: &ResultData{Result: GameResult_Draw, DrawReason: DrawReason_InusfficientMaterial},
 		},
 		"King vs King & black knight insufficient material": {
 			pos: map[string]Piece{
@@ -132,7 +130,7 @@ func TestResults(t *testing.T) {
 				"a6": NewKing(PieceColor_White),
 				"a1": NewKnight(PieceColor_Black),
 			},
-			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: &ResultData{Result: GameResult_Draw, DrawReason: DrawReason_InusfficientMaterial},
 		},
 		"King vs King & white bishop insufficient material": {
 			pos: map[string]Piece{
@@ -140,7 +138,7 @@ func TestResults(t *testing.T) {
 				"a6": NewKing(PieceColor_White),
 				"a1": NewBishop(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: &ResultData{Result: GameResult_Draw, DrawReason: DrawReason_InusfficientMaterial},
 		},
 		"King vs King & black bishop insufficient material": {
 			pos: map[string]Piece{
@@ -148,7 +146,7 @@ func TestResults(t *testing.T) {
 				"a6": NewKing(PieceColor_White),
 				"a1": NewBishop(PieceColor_Black),
 			},
-			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: &ResultData{Result: GameResult_Draw, DrawReason: DrawReason_InusfficientMaterial},
 		},
 		"King vs King & opposing square colour bishops insufficient material": {
 			pos: map[string]Piece{
@@ -157,7 +155,7 @@ func TestResults(t *testing.T) {
 				"a6": NewKing(PieceColor_White),
 				"b1": NewBishop(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMat},
+			result: &ResultData{Result: GameResult_Draw, DrawReason: DrawReason_InusfficientMaterial},
 		},
 		"King vs King & same square colour bishops, not insufficient material": {
 			pos: map[string]Piece{
@@ -166,7 +164,7 @@ func TestResults(t *testing.T) {
 				"a6": NewKing(PieceColor_White),
 				"a3": NewBishop(PieceColor_White),
 			},
-			result: ResultData{Result: GameResult_Active},
+			result: nil,
 		},
 		"Combination of timeout and opponent having insufficient material": {
 			pos: map[string]Piece{
@@ -174,7 +172,7 @@ func TestResults(t *testing.T) {
 				"a4": NewKing(PieceColor_Black),
 				"a5": NewKing(PieceColor_Black),
 			},
-			result: ResultData{Result: GameResult_Draw, DrawReason: &insufficientMatTimeout},
+			result: &ResultData{Result: GameResult_Draw, DrawReason: DrawReason_InusfficientMaterialTimeout},
 			clocks: map[PieceColor]*Clock{
 				PieceColor_White: NewClock(time.Minute),
 				PieceColor_Black: NewClock(0),
@@ -193,21 +191,22 @@ func TestResults(t *testing.T) {
 
 		g.Start()
 
-		result := g.ComputeResult()
-		if result.Result != pos.result.Result {
-			t.Errorf("%s: got game result %v, want %v",
-				title, result.Result, GameResult_Checkmate)
-		}
-		if pos.result.DrawReason != nil {
-			if result.DrawReason == nil {
-				t.Errorf("%s: got draw reason nil, want %v",
-					title, *pos.result.DrawReason)
-			} else if *result.DrawReason != *pos.result.DrawReason {
-				t.Errorf("%s: got draw reason %v, want %v",
-					title, *result.DrawReason, *pos.result.DrawReason)
+		result, _ := g.computeResult()
+
+		if (pos.result != nil) != (result != nil) {
+			t.Errorf("%s: got has result data %v, want %v", title, result != nil, pos.result != nil)
+		} else if result != nil && pos.result != nil {
+			if result.Result != pos.result.Result {
+				t.Errorf("%s: got game result %v, want %v", title, result.Result, pos.result.Result)
 			}
-		} else if result.DrawReason != nil {
-			t.Errorf("%s: draw reason got: %v, want nil", title, *result.DrawReason)
+			if result.DrawReason != pos.result.DrawReason {
+				t.Errorf("%s: got draw reason %v, want %v", title, result.DrawReason, pos.result.DrawReason)
+			}
+			if (result.Winner != nil) != (pos.result.Winner != nil) {
+				t.Errorf("%s: got has game winner %v, want %v", title, result.Winner != nil, pos.result.Winner != nil)
+			} else if result.Winner != nil && pos.result.Winner != nil && *result.Winner != *pos.result.Winner {
+				t.Errorf("%s: got game winner %v, want %v", title, *result.Winner, *pos.result.Winner)
+			}
 		}
 	}
 }
@@ -341,18 +340,16 @@ func Test3FoldRepetition(t *testing.T) {
 				t.Errorf("%s: move %d: failed before testing 3-fold repetition, %v", title, i, err)
 				break
 			}
-			result := g.ComputeResult()
+			result, ok := g.computeResult()
 			if i == len(moves)-1 && mustDraw {
-				if result.Result != GameResult_Draw {
-					t.Errorf("%s: move %d: got game result %d but want %d", title, i, result.Result, GameResult_Draw)
+				if !ok || result.Result != GameResult_Draw {
+					t.Errorf("%s: move %d: got game result %v but want draw", title, i, result)
 				}
-				if result.DrawReason == nil {
-					t.Errorf("%s: move %d: got no draw reason, but want %d", title, i, GameResult_Draw)
-				} else if *result.DrawReason != DrawReason_3FoldRepetition {
+				if result.DrawReason != DrawReason_3FoldRepetition {
 					t.Errorf("%s: move %d: got draw reason %d but want %d", title, i, result.DrawReason, DrawReason_3FoldRepetition)
 				}
-			} else if result.Result != GameResult_Active {
-				t.Errorf("%s: move %d: got game result %d when in progress but want %d", title, i, result.Result, GameResult_Active)
+			} else if result != nil {
+				t.Errorf("%s: move %d: got game result %v when in progress but want nil", title, i, result)
 			}
 		}
 	}
@@ -486,7 +483,7 @@ func Test50MoveDrawCondition(t *testing.T) {
 
 	for nMove := 0; nMove < 50; nMove++ {
 		for nSide := 0; nSide < 2; nSide++ {
-			if nSide == 0 && nMove > 0 && nMove%14 == 0 {
+			if nSide == 0 && nMove > 0 && nMove%10 == 0 {
 				oldSq := rookSq
 				rookSq = rookSq.Adding(Square{Rank: 1})
 				if err := g.Move(Move{From: oldSq, To: rookSq}); err != nil {
@@ -506,18 +503,16 @@ func Test50MoveDrawCondition(t *testing.T) {
 					nMove, nSide, oldSq.String(), activeSquare[nSide].String(), err)
 			}
 		}
-		result := g.ComputeResult()
+		result, ok := g.computeResult()
 		if nMove == 49 {
-			if result.Result != GameResult_Draw {
-				t.Errorf("Iteration %d: Got game result : %d, want: %d", nMove, result.Result, GameResult_Draw)
+			if !ok || result.Result != GameResult_Draw {
+				t.Errorf("Iteration %d: Got game result : %v, want draw", nMove, result)
 			}
-			if result.DrawReason == nil {
-				t.Errorf("Iteration %d: Got no draw reason, want: %d", nMove, DrawReason_50Moves)
-			} else if *result.DrawReason != DrawReason_50Moves {
-				t.Errorf("Iteration %d: Got draw reason %d, want: %d", nMove, *result.DrawReason, DrawReason_50Moves)
+			if result.DrawReason != DrawReason_50Moves {
+				t.Errorf("Iteration %d: Got draw reason %d, want: %d", nMove, result.DrawReason, DrawReason_50Moves)
 			}
-		} else if result.Result != GameResult_Active {
-			t.Errorf("Iteration %d. Got game result : %d, want: %d", nMove, result.Result, GameResult_Active)
+		} else if result != nil {
+			t.Errorf("Iteration %d. Got game result : %d, want nil", nMove, result)
 		}
 	}
 }
