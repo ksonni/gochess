@@ -9,6 +9,7 @@ type Game struct {
 	repititionHashes map[string]int
 	control          TimeControl
 	clocks           map[PieceColor]*Clock
+	started          bool
 	result           *ResultData
 	moves            []Move
 }
@@ -16,7 +17,7 @@ type Game struct {
 type Move struct {
 	From      Square     `json:"from"`
 	To        Square     `json:"to"`
-	Promotion *PieceType `json:"promotion"`
+	Promotion *PieceType `json:"promotion,omitempty"`
 }
 
 type MovePlan struct {
@@ -72,15 +73,16 @@ func NewGame(control TimeControl) *Game {
 }
 
 func (g *Game) Start() {
-	if g.HasEnded() || g.state.NumMoves() > 0 {
+	if g.InProgress() {
 		return
 	}
+	g.started = true
 	g.clocks[g.state.MovingSide()].Start()
 }
 
 func (g *Game) Move(move Move) error {
-	if g.HasEnded() {
-		return fmt.Errorf("game: game has ended, can not move")
+	if !g.InProgress() {
+		return fmt.Errorf("game: game is not in progress, can not move")
 	}
 	state, err := g.state.WithMove(move)
 	if err != nil {
@@ -107,14 +109,17 @@ func (game *Game) Result() (*ResultData, bool) {
 	return game.result, game.result != nil
 }
 
-func (game *Game) HasEnded() bool {
+func (game *Game) InProgress() bool {
+	if !game.started {
+		return false
+	}
 	_, ended := game.Result()
-	return ended
+	return !ended
 }
 
 func (game *Game) AgreeDraw() error {
-	if game.HasEnded() {
-		return fmt.Errorf("game: can't agree draw, game has ended")
+	if !game.InProgress() {
+		return fmt.Errorf("game: can't agree draw, game not in progress")
 	}
 	game.result = &ResultData{
 		Result:     GameResult_Draw,
@@ -124,8 +129,8 @@ func (game *Game) AgreeDraw() error {
 }
 
 func (game *Game) Resign(side PieceColor) error {
-	if game.HasEnded() {
-		return fmt.Errorf("game: can't resign, game has ended")
+	if !game.InProgress() {
+		return fmt.Errorf("game: can't resign, game not in progress")
 	}
 	winner := side.Opponent()
 	game.result = &ResultData{
@@ -133,6 +138,10 @@ func (game *Game) Resign(side PieceColor) error {
 		Winner: &winner,
 	}
 	return nil
+}
+
+func (game *Game) MovingSide() PieceColor {
+	return game.state.MovingSide()
 }
 
 // Helpers
