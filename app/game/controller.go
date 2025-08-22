@@ -12,18 +12,26 @@ import (
 	"github.com/google/uuid"
 )
 
-var service = NewGameService()
+type Controller struct {
+	service *GameService
+}
 
-func startGameHandler(w http.ResponseWriter, r *http.Request) {
-	var req StartGameRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Failed to decode JSON", http.StatusBadRequest)
-		return
+func NewController() *Controller {
+	return &Controller{
+		service: NewGameService(),
 	}
+}
 
+func (c *Controller) startGameHandler(w http.ResponseWriter, r *http.Request) {
 	user, ok := auth.Claims(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	var req StartGameRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Failed to decode JSON", http.StatusBadRequest)
 		return
 	}
 
@@ -32,7 +40,7 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 		Increment: time.Duration(req.IncrementMillis) * time.Millisecond,
 	}
 
-	gameId, err := service.NewGame(control, user.Id)
+	gameId, err := c.service.NewGame(control, user.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -49,19 +57,13 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func joinGameHandler(w http.ResponseWriter, r *http.Request) {
-	gameId, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		http.Error(w, "Invalid game ID", http.StatusBadRequest)
-		return
-	}
-	user, ok := auth.Claims(r.Context())
+func (c *Controller) joinGameHandler(w http.ResponseWriter, r *http.Request) {
+	gameId, user, ok := c.gameParams(w, r)
 	if !ok {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 
-	if err = service.JoinGame(gameId, user.Id); err != nil {
+	if err := c.service.JoinGame(gameId, user.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -71,18 +73,13 @@ func joinGameHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func gameSnapshotHandler(w http.ResponseWriter, r *http.Request) {
-	gameId, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		http.Error(w, "Invalid game ID", http.StatusBadRequest)
-		return
-	}
-	user, ok := auth.Claims(r.Context())
+func (c *Controller) gameSnapshotHandler(w http.ResponseWriter, r *http.Request) {
+	gameId, user, ok := c.gameParams(w, r)
 	if !ok {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
-	snap, err := service.SessionSnapshot(gameId, user.Id)
+
+	snap, err := c.service.SessionSnapshot(gameId, user.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -94,23 +91,19 @@ func gameSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func gameMoveHandler(w http.ResponseWriter, r *http.Request) {
-	gameId, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		http.Error(w, "Invalid game ID", http.StatusBadRequest)
+func (c *Controller) gameMoveHandler(w http.ResponseWriter, r *http.Request) {
+	gameId, user, ok := c.gameParams(w, r)
+	if !ok {
 		return
 	}
+
 	var move game.Move
 	if err := json.NewDecoder(r.Body).Decode(&move); err != nil {
 		http.Error(w, "Failed to decode JSON", http.StatusBadRequest)
 		return
 	}
-	user, ok := auth.Claims(r.Context())
-	if !ok {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-	if err = service.MakeMove(gameId, user.Id, move); err != nil {
+
+	if err := c.service.MakeMove(gameId, user.Id, move); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -120,18 +113,13 @@ func gameMoveHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func gameResignHandler(w http.ResponseWriter, r *http.Request) {
-	gameId, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		http.Error(w, "Invalid game ID", http.StatusBadRequest)
-		return
-	}
-	user, ok := auth.Claims(r.Context())
+func (c *Controller) gameResignHandler(w http.ResponseWriter, r *http.Request) {
+	gameId, user, ok := c.gameParams(w, r)
 	if !ok {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
-	if err = service.Resign(gameId, user.Id); err != nil {
+
+	if err := c.service.Resign(gameId, user.Id); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -139,4 +127,18 @@ func gameResignHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("User %s resigned from in game %s\n", user.Id, gameId)
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (c *Controller) gameParams(w http.ResponseWriter, r *http.Request) (uuid.UUID, *auth.UserClaims, bool) {
+	gameId, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "Invalid game ID", http.StatusBadRequest)
+		return uuid.Nil, nil, false
+	}
+	user, ok := auth.Claims(r.Context())
+	if !ok {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return uuid.Nil, nil, false
+	}
+	return gameId, &user, true
 }

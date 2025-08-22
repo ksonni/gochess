@@ -14,7 +14,13 @@ const kAuthCookie = "auth"
 var kJwtSecret = env.MustEnv("JWT_SECRET")
 var kCookieExpiryDays = 365
 
-func registrationHandler(w http.ResponseWriter, r *http.Request) {
+type Controller struct{}
+
+func NewController() *Controller {
+	return &Controller{}
+}
+
+func (*Controller) registrationHandler(w http.ResponseWriter, r *http.Request) {
 	c := NewBasicClaims()
 
 	token, err := jwt.CreateToken(c, []byte(kJwtSecret))
@@ -41,7 +47,7 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func meHandler(w http.ResponseWriter, r *http.Request) {
+func (*Controller) meHandler(w http.ResponseWriter, r *http.Request) {
 	claims, ok := Claims(r.Context())
 	if !ok {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
