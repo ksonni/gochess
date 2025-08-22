@@ -18,6 +18,7 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 	var req StartGameRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Failed to decode JSON", http.StatusBadRequest)
+		return
 	}
 
 	user, ok := auth.Claims(r.Context())
@@ -90,5 +91,31 @@ func gameSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func gameMoveHandler(w http.ResponseWriter, r *http.Request) {
+	gameId, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "Invalid game ID", http.StatusBadRequest)
+		return
+	}
+	var move game.Move
+	if err := json.NewDecoder(r.Body).Decode(&move); err != nil {
+		http.Error(w, "Failed to decode JSON", http.StatusBadRequest)
+		return
+	}
+	user, ok := auth.Claims(r.Context())
+	if !ok {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+	if err = service.MakeMove(gameId, user.Id, move); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("User %s made move %v in game %s\n", user.Id, move, gameId)
+
 	w.WriteHeader(http.StatusOK)
 }

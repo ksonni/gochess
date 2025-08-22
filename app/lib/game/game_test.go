@@ -646,6 +646,13 @@ func TestRejectsMovesWhenOutOfTime(t *testing.T) {
 
 func TestDrawByAgreement(t *testing.T) {
 	g := NewGame(TimeControl_Thirty)
+
+	if err := g.AgreeDraw(); err == nil {
+		t.Error("AgreeDraw() was accepted even before the game has started")
+	}
+
+	g.Start()
+
 	if err := g.AgreeDraw(); err != nil {
 		t.Fatalf("AgreeDraw() errored: %v", err)
 	}
@@ -676,8 +683,15 @@ func TestDrawByAgreement(t *testing.T) {
 
 func TestResign(t *testing.T) {
 	g := NewGame(TimeControl_Thirty)
+
+	if err := g.Resign(PieceColor_White); err == nil {
+		t.Errorf("Resign(%d) was accepted even before the game has started", PieceColor_White)
+	}
+
+	g.Start()
+
 	if err := g.Resign(PieceColor_White); err != nil {
-		t.Fatalf("Resign() errored: %v", err)
+		t.Fatalf("Resign(%d) errored: %v", PieceColor_White, err)
 	}
 
 	if result, ended := g.Result(); ended {

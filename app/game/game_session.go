@@ -10,13 +10,13 @@ import (
 
 type GameSession struct {
 	game  *game.Game
-	users map[game.PieceColor]uuid.UUID
+	users map[uuid.UUID]game.PieceColor
 	ch    chan sessionCommand
 }
 
 type GameSessionSnapshot struct {
 	Game  game.GameSnapshot             `json:"game"`
-	Users map[game.PieceColor]uuid.UUID `json:"users"`
+	Users map[uuid.UUID]game.PieceColor `json:"users"`
 }
 
 type sessionCommand interface{}
@@ -31,6 +31,12 @@ type snapshotCommand struct {
 	ch     chan<- snapshotResult
 }
 
+type moveCommand struct {
+	userId uuid.UUID
+	move   game.Move
+	ch     chan<- error
+}
+
 type snapshotResult struct {
 	snapshot *GameSessionSnapshot
 	err      error
@@ -39,8 +45,8 @@ type snapshotResult struct {
 func NewGameSession(ctrl game.TimeControl, userId uuid.UUID) *GameSession {
 	session := GameSession{
 		game: game.NewGame(ctrl),
-		users: map[game.PieceColor]uuid.UUID{
-			game.PieceColor(rand.Intn(2)): userId,
+		users: map[uuid.UUID]game.PieceColor{
+			userId: game.PieceColor(rand.Intn(2)),
 		},
 		ch: make(chan sessionCommand),
 	}
@@ -59,6 +65,8 @@ func startSession(s *GameSession, ch <-chan sessionCommand) {
 			c.ch <- s.joinGame(c.userId)
 		case snapshotCommand:
 			c.ch <- s.gameSnapshot(c.userId)
+		case moveCommand:
+			c.ch <- s.makeMove(c.userId, c.move)
 		default:
 			panic(fmt.Sprintf("Unknown command send to game service: %v", c))
 		}
@@ -70,29 +78,24 @@ func (s *GameSession) joinGame(userId uuid.UUID) error {
 		return fmt.Errorf("game is already full")
 	}
 
-	var side game.PieceColor
-	for k := range s.users {
-		side = k
-		break
-	}
-
-	if existing := s.users[side]; existing == userId {
+	if _, exists := s.users[userId]; exists {
 		return fmt.Errorf("user is already in the game")
 	}
 
-	opponent := side.Opponent()
-	s.users[opponent] = userId
+	var side game.PieceColor
+	for _, v := range s.users {
+		side = v
+		break
+	}
+
+	s.users[userId] = side.Opponent()
 	s.game.Start()
 
 	return nil
 }
 
 func (s *GameSession) gameSnapshot(userId uuid.UUID) snapshotResult {
-	var ownsGame bool
-	for _, id := range s.users {
-		ownsGame = ownsGame || id == userId
-	}
-	if !ownsGame {
+	if _, exists := s.users[userId]; !exists {
 		return snapshotResult{nil, fmt.Errorf("no permission to access game")}
 	}
 	snap := &GameSessionSnapshot{
@@ -100,4 +103,11 @@ func (s *GameSession) gameSnapshot(userId uuid.UUID) snapshotResult {
 		Users: s.users,
 	}
 	return snapshotResult{snapshot: snap}
+}
+
+func (s *GameSession) makeMove(userId uuid.UUID, move game.Move) error {
+	if side, exists := s.users[userId]; !exists || side != s.game.MovingSide() {
+		return fmt.Errorf("user is not allowed to make this move")
+	}
+	return s.game.Move(move)
 }
