@@ -43,6 +43,16 @@ func (s *GameService) JoinGame(gameId uuid.UUID, userId uuid.UUID) error {
 	return <-ch
 }
 
+func (s *GameService) CloseSession(gameId uuid.UUID) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if g, ok := s.games[gameId]; ok {
+		g.Close()
+		delete(s.games, gameId)
+	}
+}
+
 func (s *GameService) sendCommand(cmd sessionCommand, gameId uuid.UUID) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
