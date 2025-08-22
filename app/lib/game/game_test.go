@@ -706,6 +706,34 @@ func TestResign(t *testing.T) {
 	}
 }
 
+func TestMoveLogging(t *testing.T) {
+	g := NewGame(TimeControl_Thirty)
+
+	g.Start()
+
+	move := Move{From: sq("e2"), To: sq("e4")}
+	if err := g.Move(move); err != nil {
+		t.Fatalf("Move(%s) failed unexpectedly: %v", move, err)
+	}
+	if len(g.moves) != 1 {
+		t.Errorf("Incorrect moves length after first move got %d, want %d", len(g.moves), 1)
+	}
+	if actual := g.moves[0]; actual != move {
+		t.Errorf("Incorrect first move got %v, want %v", actual, move)
+	}
+
+	move = Move{From: sq("e7"), To: sq("e5")}
+	if err := g.Move(move); err != nil {
+		t.Fatalf("Move(%s) failed unexpectedly: %v", move, err)
+	}
+	if len(g.moves) != 2 {
+		t.Errorf("Incorrect moves length after second move got %d, want %d", len(g.moves), 1)
+	}
+	if actual := g.moves[1]; actual != move {
+		t.Errorf("Incorrect second move got %v, want %v", actual, move)
+	}
+}
+
 // Helper
 
 type timeTrackingParm struct {

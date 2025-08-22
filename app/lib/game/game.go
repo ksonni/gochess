@@ -1,6 +1,8 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Game struct {
 	state            *GameState
@@ -8,6 +10,7 @@ type Game struct {
 	control          TimeControl
 	clocks           map[PieceColor]*Clock
 	result           *ResultData
+	moves            []Move
 }
 
 type Move struct {
@@ -64,6 +67,7 @@ func NewGame(control TimeControl) *Game {
 			PieceColor_White: NewClock(control.Total),
 			PieceColor_Black: NewClock(control.Total),
 		},
+		moves: []Move{},
 	}
 }
 
@@ -90,6 +94,8 @@ func (g *Game) Move(move Move) error {
 	g.repititionHashes[hash] = g.repititionHashes[hash] + 1
 
 	g.result, _ = g.computeResult()
+
+	g.moves = append(g.moves, move)
 
 	return nil
 }
