@@ -6,8 +6,8 @@ import (
 )
 
 type Square struct {
-	File int
-	Rank int
+	File int `json:"file"`
+	Rank int `json:"rank"`
 }
 
 type SquareColor int

@@ -14,11 +14,26 @@ type GameSession struct {
 	ch    chan sessionCommand
 }
 
+type GameSessionSnapshot struct {
+	Game  game.GameSnapshot             `json:"game"`
+	Users map[game.PieceColor]uuid.UUID `json:"users"`
+}
+
 type sessionCommand interface{}
 
 type joinGameCommand struct {
 	userId uuid.UUID
 	ch     chan<- error
+}
+
+type snapshotCommand struct {
+	userId uuid.UUID
+	ch     chan<- snapshotResult
+}
+
+type snapshotResult struct {
+	snapshot *GameSessionSnapshot
+	err      error
 }
 
 func NewGameSession(ctrl game.TimeControl, userId uuid.UUID) *GameSession {
@@ -42,6 +57,8 @@ func startSession(s *GameSession, ch <-chan sessionCommand) {
 		switch c := cmd.(type) {
 		case joinGameCommand:
 			c.ch <- s.joinGame(c.userId)
+		case snapshotCommand:
+			c.ch <- s.gameSnapshot(c.userId)
 		default:
 			panic(fmt.Sprintf("Unknown command send to game service: %v", c))
 		}
@@ -65,6 +82,22 @@ func (s *GameSession) joinGame(userId uuid.UUID) error {
 
 	opponent := side.Opponent()
 	s.users[opponent] = userId
-	fmt.Printf("Shit actually happened lalalalaa: %v\n", s.users)
+	s.game.Start()
+
 	return nil
+}
+
+func (s *GameSession) gameSnapshot(userId uuid.UUID) snapshotResult {
+	var ownsGame bool
+	for _, id := range s.users {
+		ownsGame = ownsGame || id == userId
+	}
+	if !ownsGame {
+		return snapshotResult{nil, fmt.Errorf("no permission to access game")}
+	}
+	snap := &GameSessionSnapshot{
+		Game:  s.game.Snapshot(),
+		Users: s.users,
+	}
+	return snapshotResult{snapshot: snap}
 }

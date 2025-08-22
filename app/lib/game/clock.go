@@ -30,9 +30,9 @@ func (c *Clock) Increment(duration time.Duration) {
 
 func (c *Clock) RemainingTime() time.Duration {
 	if c.running {
-		return c.remaining - time.Now().Sub(c.restartTime)
+		return max(c.remaining-time.Now().Sub(c.restartTime), 0)
 	}
-	return c.remaining
+	return max(c.remaining, 0)
 }
 
 func (c *Clock) Stop() {
