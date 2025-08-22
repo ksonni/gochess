@@ -98,7 +98,7 @@ func TestPromotion(t *testing.T) {
 		pawnSquare    string
 		move          testMove
 		setupMoves    []testMove
-		promoted      Piece
+		promoted      PieceType
 		possibleMoves []string
 		cantPromote   bool
 	}{
@@ -106,60 +106,45 @@ func TestPromotion(t *testing.T) {
 			pawnSquare:    "a2",
 			move:          testMove{"a7", "a8"},
 			possibleMoves: []string{"a8", "b8"},
-			promoted:      NewKnight(PieceColor_White),
+			promoted:      PieceType_Knight,
 		},
 		"Can promote to bishop": {
 			pawnSquare:    "a2",
 			move:          testMove{"a7", "a8"},
 			possibleMoves: []string{"a8", "b8"},
-			promoted:      NewBishop(PieceColor_White),
+			promoted:      PieceType_Bishop,
 		},
 		"Can promote to rook": {
 			pawnSquare:    "a2",
 			move:          testMove{"a7", "a8"},
 			possibleMoves: []string{"a8", "b8"},
-			promoted:      NewRook(PieceColor_White),
+			promoted:      PieceType_Rook,
 		},
 		"Can promote to queen": {
 			pawnSquare:    "a2",
 			move:          testMove{"a7", "a8"},
 			possibleMoves: []string{"a8", "b8"},
-			promoted:      NewRook(PieceColor_White),
+			promoted:      PieceType_Queen,
 		},
 		"Can't promote to king": {
 			pawnSquare:    "a2",
 			move:          testMove{"a7", "a8"},
 			possibleMoves: []string{"a8", "b8"},
-			promoted:      NewKing(PieceColor_White),
+			promoted:      PieceType_King,
 			cantPromote:   true,
 		},
 		"Can't promote to another pawn": {
 			pawnSquare:    "a2",
 			move:          testMove{"a7", "a8"},
 			possibleMoves: []string{"a8", "b8"},
-			promoted:      NewPawn(PieceColor_White),
-			cantPromote:   true,
-		},
-		"Can't promote to piece of a different color": {
-			pawnSquare:    "a2",
-			move:          testMove{"a7", "a8"},
-			possibleMoves: []string{"a8", "b8"},
-			promoted:      NewPawn(PieceColor_Black),
-			cantPromote:   true,
-		},
-		"Can promote a black piece": {
-			pawnSquare:    "a7",
-			move:          testMove{"a2", "a1"},
-			setupMoves:    []testMove{{"e2", "e4"}},
-			promoted:      NewQueen(PieceColor_White),
-			possibleMoves: []string{"a1", "b1"},
+			promoted:      PieceType_Pawn,
 			cantPromote:   true,
 		},
 		"Promotion from the middle of the board": {
 			pawnSquare:    "e2",
 			move:          testMove{"e7", "e8"},
 			possibleMoves: []string{"e8", "d8", "f8"},
-			promoted:      NewRook(PieceColor_White),
+			promoted:      PieceType_Rook,
 		},
 	}
 	for title, test := range tests {
@@ -197,14 +182,14 @@ func testEnPassant(title string, setupMoves []testMove, enPassant testMove,
 }
 
 func testPromotion(title string, pawnSquare string, promotionMove testMove,
-	setupMoves []testMove, promoted Piece, mustFail bool, possibleMoves []string, t *testing.T) {
+	setupMoves []testMove, promoted PieceType, mustFail bool, possibleMoves []string, t *testing.T) {
 	g := playGame(title, setupMoves, false, t)
 	clearSquares(g, promotionMove.from, promotionMove.to)
 	g.Board().jumpPiece(sq(pawnSquare), sq(promotionMove.from))
 	move := Move{
 		From:      sq(promotionMove.from),
 		To:        sq(promotionMove.to),
-		Promotion: promoted,
+		Promotion: &promoted,
 	}
 	moves := g.PlanPossibleMoves(move.From)
 	if lGot, lWant := len(moves), len(possibleMoves)*4; lGot != lWant {
@@ -223,7 +208,7 @@ func testPromotion(title string, pawnSquare string, promotionMove testMove,
 			title, promotionMove.from, promotionMove.to)
 		return
 	}
-	if piece, ok := g2.Board().GetPiece(sq(promotionMove.to)); !ok || piece.Id() != promoted.Id() {
+	if piece, ok := g2.Board().GetPiece(sq(promotionMove.to)); !ok || piece.Type() != promoted {
 		t.Errorf("%s: promoted piece not found on %s", title, promotionMove.to)
 	}
 }
