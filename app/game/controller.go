@@ -119,3 +119,24 @@ func gameMoveHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func gameResignHandler(w http.ResponseWriter, r *http.Request) {
+	gameId, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "Invalid game ID", http.StatusBadRequest)
+		return
+	}
+	user, ok := auth.Claims(r.Context())
+	if !ok {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+	if err = service.Resign(gameId, user.Id); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("User %s resigned from in game %s\n", user.Id, gameId)
+
+	w.WriteHeader(http.StatusOK)
+}

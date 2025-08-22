@@ -53,6 +53,16 @@ func (s *GameService) MakeMove(gameId uuid.UUID, userId uuid.UUID, move game.Mov
 
 }
 
+func (s *GameService) Resign(gameId uuid.UUID, userId uuid.UUID) error {
+	ch := make(chan error)
+	cmd := resignCommand{userId, ch}
+	if err := s.sendCommand(cmd, gameId); err != nil {
+		return err
+	}
+	return <-ch
+
+}
+
 func (s *GameService) SessionSnapshot(gameId uuid.UUID, userId uuid.UUID) (*GameSessionSnapshot, error) {
 	ch := make(chan snapshotResult)
 	cmd := snapshotCommand{userId, ch}
