@@ -3,7 +3,6 @@ package game
 import (
 	"fmt"
 	"gochess/lib/game"
-	"math/rand"
 	"sync"
 
 	"github.com/google/uuid"
@@ -12,11 +11,6 @@ import (
 type GameService struct {
 	games map[uuid.UUID]*GameSession
 	mu    sync.RWMutex
-}
-
-type GameSession struct {
-	game  *game.Game
-	users map[game.PieceColor]uuid.UUID
 }
 
 func NewGameService() *GameService {
@@ -31,16 +25,32 @@ func (s *GameService) NewGame(ctrl game.TimeControl, userId uuid.UUID) (uuid.UUI
 	}
 
 	id := uuid.New()
-	session := GameSession{
-		game: game.NewGame(ctrl),
-		users: map[game.PieceColor]uuid.UUID{
-			game.PieceColor(rand.Intn(2)): userId,
-		},
-	}
+	session := NewGameSession(ctrl, userId)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.games[id] = &session
+	s.games[id] = session
 	return id, nil
+}
+
+func (s *GameService) JoinGame(gameId uuid.UUID, userId uuid.UUID) error {
+	ch := make(chan error)
+	cmd := joinGameCommand{userId, ch}
+	if err := s.sendCommand(cmd, gameId); err != nil {
+		return err
+	}
+	return <-ch
+}
+
+func (s *GameService) sendCommand(cmd sessionCommand, gameId uuid.UUID) error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	g, ok := s.games[gameId]
+	if !ok {
+		return fmt.Errorf("game not found")
+	}
+	g.ch <- cmd
+	return nil
 }

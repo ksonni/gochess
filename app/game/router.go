@@ -6,4 +6,5 @@ import (
 
 func RegisterRoutes(r chi.Router) {
 	r.Post("/game/start", startGameHandler)
+	r.Post("/game/{id}/join", joinGameHandler)
 }

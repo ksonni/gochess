@@ -7,6 +7,9 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 var service = NewGameService()
@@ -14,7 +17,7 @@ var service = NewGameService()
 func startGameHandler(w http.ResponseWriter, r *http.Request) {
 	var req StartGameRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "failed to decode JSON", http.StatusBadRequest)
+		http.Error(w, "Failed to decode JSON", http.StatusBadRequest)
 	}
 
 	user, ok := auth.Claims(r.Context())
@@ -28,19 +31,41 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 		Increment: time.Duration(req.IncrementMillis) * time.Millisecond,
 	}
 
-	id, err := service.NewGame(control, user.Id)
+	gameId, err := service.NewGame(control, user.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Created game: %s\n", id)
+	log.Printf("User %s created game %s\n", user.Id, gameId)
 
-	res := StartGameResponse{Id: id}
+	res := StartGameResponse{Id: gameId}
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func joinGameHandler(w http.ResponseWriter, r *http.Request) {
+	gameId, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "Invalid game ID", http.StatusBadRequest)
+		return
+	}
+	user, ok := auth.Claims(r.Context())
+	if !ok {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	if err = service.JoinGame(gameId, user.Id); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("User %s joined game %s\n", user.Id, gameId)
+
+	w.WriteHeader(http.StatusOK)
 }
