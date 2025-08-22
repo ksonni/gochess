@@ -1,0 +1,36 @@
+*, :before, :after {
+    box-sizing: border-box;
+}
+
+html {
+    font-family: sans-serif;
+    background: rgb(236, 218, 185);
+}
+
+body {
+    margin: 0;
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid #222;
+  background: #fff;
+  color: #111;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.1;
+  cursor: pointer;
+  transition: transform 80ms ease, opacity 120ms ease, background 120ms ease;
+}
+.btn:hover { transform: translateY(-0.5px); }
+.btn:active { transform: translateY(0.5px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-ghost {
+  background: transparent;
+  border-style: dashed;
+  border-color: #666;
+  color: #111;
+}
+.btn-ghost:hover { background: #f4f4f4; }
