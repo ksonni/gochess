@@ -1,22 +1,32 @@
 <script setup>
 
-import { TheChessboard } from 'vue3-chessboard';
-import 'vue3-chessboard/style.css';
+import StatusBar from '@/components/StatusBar.vue';
+import Dialog from '@/components/Dialog.vue';
+import Board from '@/components/Board.vue';
+
+import '@/styles.css';
 
 </script>
 
 <template>
-  <div class="board-container">
-    <TheChessboard />
+  <div class="container">
+    <StatusBar hideControls playerName="Opponent" inProgress />
+
+    <Board />
+
+    <StatusBar :timeMs="60000" playerName="Me" inProgress />
   </div>
 </template>
 
 <style scoped>
-.board-container {
+
+.container {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 12px;
   height: 100vh;
 }
+
 </style>
 
