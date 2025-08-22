@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"math/rand"
 )
 
@@ -9,6 +10,25 @@ type Piece interface {
 	Color() PieceColor
 	Id() PieceId
 	Type() PieceType
+}
+
+func NewPiece(p PieceType, color PieceColor) Piece {
+	switch p {
+	case PieceType_King:
+		return NewKing(color)
+	case PieceType_Queen:
+		return NewQueen(color)
+	case PieceType_Rook:
+		return NewRook(color)
+	case PieceType_Bishop:
+		return NewBishop(color)
+	case PieceType_Knight:
+		return NewKnight(color)
+	case PieceType_Pawn:
+		return NewPawn(color)
+	default:
+		panic(fmt.Sprintf("Failed to create piece for type: %v", p))
+	}
 }
 
 type PieceMover interface {

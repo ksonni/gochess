@@ -13,7 +13,7 @@ type Game struct {
 type Move struct {
 	From      Square
 	To        Square
-	Promotion Piece
+	Promotion *PieceType
 }
 
 type MovePlan struct {

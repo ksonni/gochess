@@ -69,7 +69,7 @@ func (p Pawn) PlanPossibleMovesLocally(from Square, g *GameState) []MovePlan {
 		var moves []Move
 		if movement.mustPromote {
 			for _, piece := range p.promotablePieces() {
-				moves = append(moves, Move{From: from, To: to, Promotion: piece})
+				moves = append(moves, Move{From: from, To: to, Promotion: &piece})
 			}
 		} else {
 			moves = append(moves, Move{From: from, To: to})
@@ -96,10 +96,11 @@ func (p Pawn) planPawnMovement(move Move, movement *pawnMovement, g *GameState) 
 	board.jumpPiece(from, to)
 
 	if movement.mustPromote {
-		if promotion == nil || !p.canPromoteTo(promotion) {
-			return nil, fmt.Errorf("pawn: either no piece or an invalid one has been provided for promotion")
+		if promotion == nil || !p.canPromoteTo(*promotion) {
+			return nil, fmt.Errorf("pawn: either no piece or an invalid type has been provided for promotion")
 		}
-		board.setPiece(promotion, to)
+		piece := NewPiece(*promotion, p.Color())
+		board.setPiece(piece, to)
 	}
 	if movement.secondaryCapture != nil {
 		board.clearSquare(*movement.secondaryCapture)
@@ -278,23 +279,20 @@ func (p Pawn) promotionRank(g *GameState) int {
 	return 0
 }
 
-func (p Pawn) canPromoteTo(target Piece) bool {
-	if p.Color() != target.Color() {
-		return false
-	}
-	switch target.(type) {
-	case Queen, Rook, Bishop, Knight:
+func (p Pawn) canPromoteTo(target PieceType) bool {
+	switch target {
+	case PieceType_Queen, PieceType_Rook, PieceType_Bishop, PieceType_Knight:
 		return true
 	default:
 		return false
 	}
 }
 
-func (p Pawn) promotablePieces() []Piece {
-	return []Piece{
-		NewQueen(p.Color()),
-		NewRook(p.Color()),
-		NewKnight(p.Color()),
-		NewBishop(p.Color()),
+func (p Pawn) promotablePieces() []PieceType {
+	return []PieceType{
+		PieceType_Queen,
+		PieceType_Rook,
+		PieceType_Knight,
+		PieceType_Bishop,
 	}
 }

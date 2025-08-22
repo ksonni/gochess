@@ -666,7 +666,7 @@ func TestDrawByAgreement(t *testing.T) {
 
 	move := Move{sq("e2"), sq("e4"), nil}
 	if err := g.Move(move); err == nil {
-		t.Errorf("Move(%s) was allowed even after agreeing a draw", move)
+		t.Errorf("Move(%v) was allowed even after agreeing a draw", move)
 	}
 
 	if err := g.AgreeDraw(); err == nil {
@@ -698,7 +698,7 @@ func TestResign(t *testing.T) {
 
 	move := Move{sq("e2"), sq("e4"), nil}
 	if err := g.Move(move); err == nil {
-		t.Errorf("Move(%s) was allowed even after resigning", move)
+		t.Errorf("Move(%v) was allowed even after resigning", move)
 	}
 
 	if err := g.Resign(PieceColor_Black); err == nil {
@@ -727,19 +727,19 @@ func testTimeTracking(t *testing.T, g *Game, params []timeTrackingParm) {
 			synctest.Wait()
 
 			if error := g.Move(p.move); error != nil {
-				t.Fatalf("Move(%s) unexpted error occured: %v", p.move, error)
+				t.Fatalf("Move(%v) unexpted error occured: %v", p.move, error)
 			}
 
 			want := p.wantRemaining[PieceColor_White]
 			got := whiteClock.RemainingTime()
 
 			if got != want {
-				t.Errorf("Move(%s) got remaining white time %s, want %s", p.move, got, want)
+				t.Errorf("Move(%v) got remaining white time %s, want %s", p.move, got, want)
 			}
 			want = p.wantRemaining[PieceColor_Black]
 			got = blackClock.RemainingTime()
 			if got != want {
-				t.Errorf("Move(%s) got remaining black time %s, want %s", p.move, got, want)
+				t.Errorf("Move(%v) got remaining black time %s, want %s", p.move, got, want)
 			}
 		}
 	})
