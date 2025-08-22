@@ -713,7 +713,7 @@ func TestMoveLogging(t *testing.T) {
 
 	move := Move{From: sq("e2"), To: sq("e4")}
 	if err := g.Move(move); err != nil {
-		t.Fatalf("Move(%s) failed unexpectedly: %v", move, err)
+		t.Fatalf("Move(%v) failed unexpectedly: %v", move, err)
 	}
 	if len(g.moves) != 1 {
 		t.Errorf("Incorrect moves length after first move got %d, want %d", len(g.moves), 1)
@@ -724,7 +724,7 @@ func TestMoveLogging(t *testing.T) {
 
 	move = Move{From: sq("e7"), To: sq("e5")}
 	if err := g.Move(move); err != nil {
-		t.Fatalf("Move(%s) failed unexpectedly: %v", move, err)
+		t.Fatalf("Move(%v) failed unexpectedly: %v", move, err)
 	}
 	if len(g.moves) != 2 {
 		t.Errorf("Incorrect moves length after second move got %d, want %d", len(g.moves), 1)

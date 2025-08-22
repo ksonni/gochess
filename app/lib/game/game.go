@@ -14,9 +14,9 @@ type Game struct {
 }
 
 type Move struct {
-	From      Square
-	To        Square
-	Promotion *PieceType
+	From      Square     `json:"from"`
+	To        Square     `json:"to"`
+	Promotion *PieceType `json:"promotion"`
 }
 
 type MovePlan struct {
@@ -46,9 +46,9 @@ const (
 )
 
 type ResultData struct {
-	Result     Result
-	DrawReason DrawReason
-	Winner     *PieceColor
+	Result     Result      `json:"result"`
+	DrawReason DrawReason  `json:"draw_reason,omitempty"`
+	Winner     *PieceColor `json:"winner,omitempty"`
 }
 
 const (

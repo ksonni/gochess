@@ -43,6 +43,24 @@ func (s *GameService) JoinGame(gameId uuid.UUID, userId uuid.UUID) error {
 	return <-ch
 }
 
+func (s *GameService) SessionSnapshot(gameId uuid.UUID, userId uuid.UUID) (*GameSessionSnapshot, error) {
+	ch := make(chan snapshotResult)
+	cmd := snapshotCommand{userId, ch}
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	g, ok := s.games[gameId]
+	if !ok {
+		return nil, fmt.Errorf("game not found")
+	}
+
+	g.ch <- cmd
+	result := <-ch
+
+	return result.snapshot, result.err
+}
+
 func (s *GameService) CloseSession(gameId uuid.UUID) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
