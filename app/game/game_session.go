@@ -37,6 +37,11 @@ type moveCommand struct {
 	ch     chan<- error
 }
 
+type resignCommand struct {
+	userId uuid.UUID
+	ch     chan<- error
+}
+
 type snapshotResult struct {
 	snapshot *GameSessionSnapshot
 	err      error
@@ -67,6 +72,8 @@ func startSession(s *GameSession, ch <-chan sessionCommand) {
 			c.ch <- s.gameSnapshot(c.userId)
 		case moveCommand:
 			c.ch <- s.makeMove(c.userId, c.move)
+		case resignCommand:
+			c.ch <- s.resign(c.userId)
 		default:
 			panic(fmt.Sprintf("Unknown command send to game service: %v", c))
 		}
@@ -110,4 +117,12 @@ func (s *GameSession) makeMove(userId uuid.UUID, move game.Move) error {
 		return fmt.Errorf("user is not allowed to make this move")
 	}
 	return s.game.Move(move)
+}
+
+func (s *GameSession) resign(userId uuid.UUID) error {
+	side, exists := s.users[userId]
+	if !exists {
+		return fmt.Errorf("user is not allowed to resign from this game")
+	}
+	return s.game.Resign(side)
 }
