@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gochess/auth"
 	"gochess/db"
+	"gochess/game"
 	"log"
 	"net/http"
 
@@ -29,6 +30,7 @@ func main() {
 		r.Group(func(p chi.Router) {
 			p.Use(auth.Authenticate)
 			auth.RegisterRoutes(p)
+			game.RegisterRoutes(p)
 		})
 		auth.RegisterPublicRoutes(r)
 	})
