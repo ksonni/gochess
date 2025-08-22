@@ -9,6 +9,11 @@ type TimeControl struct {
 	Increment time.Duration
 }
 
+func (t TimeControl) Validate() bool {
+	return t.Total >= 1*time.Minute && t.Total <= 24*time.Hour &&
+		t.Increment >= 0 && t.Increment <= 2*time.Minute
+}
+
 var (
 	TimeControl_TwoOne = TimeControl{
 		Total:     2 * time.Minute,
