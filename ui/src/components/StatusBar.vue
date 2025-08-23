@@ -33,7 +33,7 @@ function formatTime(ms) {
   <div class="status-bar" role="group" aria-label="Player status bar">
     <div v-if="!inProgress" class="sb-row">
       <VBtn class="btn" :disabled="disabled" @click="emit('start')" aria-label="Start game">
-        Start
+        Start game
       </VBtn>
     </div>
     <div v-else class="sb-row">
