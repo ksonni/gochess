@@ -6,8 +6,8 @@ const props = defineProps({
   open: { type: Boolean, required: true },
   title: { type: String, default: '' },
   message: { type: String, default: '' },
-  confirmLabel: { type: String, default: 'Confirm' },
-  cancelLabel: { type: String, default: 'Cancel' },
+  confirmLabel: { type: String },
+  cancelLabel: { type: String },
   disabled: Boolean
 })
 
@@ -67,16 +67,17 @@ function onBackdropClick(e) {
           <h2 id="gd-title">{{ title }}</h2>
         </header>
 
-        <section v-if="message" class="gd-body">
+        <section class="gd-body">
           <p id="gd-desc">{{ message }}</p>
           <slot />
         </section>
 
         <footer class="gd-actions">
-          <button type="button" class="btn btn-ghost" :disabled="disabled" @click="() => { emit('cancel'); emit('close') }">
+          <button v-if="cancelLabel" type="button" class="btn btn-ghost" :disabled="disabled" @click="() => { emit('cancel'); emit('close') }">
             {{ cancelLabel }}
           </button>
-          <button type="button" class="btn" :disabled="disabled" @click="() => { emit('confirm'); emit('close') }">
+
+          <button v-if="confirmLabel" type="button" class="btn" :disabled="disabled" @click="() => { emit('confirm'); emit('close') }">
             {{ confirmLabel }}
           </button>
         </footer>
@@ -111,12 +112,15 @@ function onBackdropClick(e) {
 .gd-header { margin-bottom: 8px; }
 .gd-header h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.3;
   font-weight: 600;
 }
 
-.gd-body { margin-bottom: 12px; }
+.gd-body { 
+    font-size: 14px;
+    margin-bottom: 12px; 
+}
 .gd-body p { margin: 0; }
 
 .gd-actions {
