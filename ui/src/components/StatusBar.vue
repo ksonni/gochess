@@ -1,11 +1,12 @@
 <script setup>
 
+import { computed } from 'vue';
 import { VBtn } from 'vuetensils'
 
 const props = defineProps({
   playerName: String,
   timeMs: Number,
-  hideControls: Boolean,
+  isOpponent: Boolean,
   inProgress: { type: Boolean, required: true },
   hasDrawOffer: Boolean,
   disabled: Boolean,
@@ -27,29 +28,37 @@ function formatTime(ms) {
   return base
 }
 
+const nameStyle = computed(() => {
+    const show = props.inProgress || !props.isOpponent;
+    return {
+        opacity: show ? 1 : 0,
+        userSelect: show ? 'auto' : 'none',
+    }
+});
+
 </script>
 
 <template>
   <div class="status-bar" role="group" aria-label="Player status bar">
-    <div v-if="!inProgress" class="sb-row">
+    <div v-if="!inProgress && !isOpponent" class="sb-row">
       <VBtn class="btn" :disabled="disabled" @click="emit('start')" aria-label="Start game">
         Start game
       </VBtn>
     </div>
     <div v-else class="sb-row">
-      <span class="sb-name">{{ playerName }}</span>
-      <span :class="{ urgent: !hideControls && (timeMs || 0) < showMsBelow }">
+      <span class="sb-name" :style="nameStyle">{{ playerName }}</span>
+      <span :style="nameStyle" :class="{ urgent: !isOpponent && (timeMs || 0) < showMsBelow }">
         {{ formatTime(timeMs) }}
       </span>
 
-      <VBtn class="btn btn-ghost" v-if="!hideControls" :disabled="disabled" @click="emit('resign')">
+      <VBtn class="btn btn-ghost" v-if="!isOpponent" :disabled="disabled" @click="emit('resign')">
         Resign
       </VBtn>
 
-      <VBtn class="btn" v-if="!hideControls && !hasDrawOffer" :disabled="disabled" @click="emit('offer-draw')">
+      <VBtn class="btn" v-if="!isOpponent && !hasDrawOffer" :disabled="disabled" @click="emit('offer-draw')">
         Offer draw
       </VBtn>
-      <VBtn class="btn btn-ghost urgent" v-else-if="!hideControls && hasDrawOffer" :disabled="disabled" @click="emit('accept-draw')">
+      <VBtn class="btn btn-ghost urgent" v-else-if="!isOpponent && hasDrawOffer" :disabled="disabled" @click="emit('accept-draw')">
         Accept draw
       </VBtn>
       <VBtn class="btn urgent" v-if="hasDrawOffer" :disabled="disabled" @click="emit('decline-draw')">

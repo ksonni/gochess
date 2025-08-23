@@ -49,8 +49,7 @@ async function copyUrl() {
 <template>
   <div class="container">
     <StatusBar 
-        v-if="inProgress" 
-        hideControls 
+        isOpponent 
         playerName="Opponent" 
         :inProgress="inProgress" 
     />
